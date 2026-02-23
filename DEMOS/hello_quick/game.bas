@@ -65,6 +65,11 @@ system
 '$include: 'INCLUDES\PANIC.BM'
 '$include: 'INCLUDES\VGA.BM'
 
+sub drawMouse
+  spr imgCursor, mouseX, mouseY
+end sub
+
+
 sub init
   initLogger
   initDeltaTime
@@ -73,14 +78,14 @@ sub init
   Randomize Timer
 
   initBuffer
+  startScaledMode
   initMouse
   hideMouse
 
   ' Load assets
   loadBMFont defaultFont, defaultFontGlyphs(), "assets\fonts\tahoma_bold_10.txt"
 
-  imgCursor = loadImage("IMG\cursor.png")
-
+  imgCursor = loadImage("assets\images\cursor.png")
 
   ' Init game state
   done = qbFalse
@@ -88,17 +93,25 @@ end sub
 
 
 sub ExUpdate
+  updateDeltaTime
+  incrementFPS
+
   If lastEsc <> isKeyDown(SC_ESCAPE) Then
     lastEsc = isKeyDown(SC_ESCAPE)
 
     if lastEsc then done = qbTrue
   end if
+
+  ' Your update code here
 end sub
 
 sub ExDraw
   cls , CornflowerBlue
 
   printBMFont defaultFont, defaultFontGlyphs(), "Hello world!", 10, 10
+
+  drawMouse
+  drawFPS
 
   flush
 end sub

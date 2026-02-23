@@ -10,10 +10,7 @@ my @cmd = (
 	$sevenzip_path,
 	"a",
 	"game.zip",
-	"FONTS/",
-	"IMG/",
-	"BGM/",
-	"SFX/",
+	"assets/",
 	"MAIN.BAS"
 );
 
