@@ -75,8 +75,8 @@ Sub drawFPS
   dim w as integer
 
   s = "FPS:" + Str$(lastFPS)
-  w = measureBMFont(s, defaultFontGlyphs())
-  printBMFont s, vgaWidth - w - 4, 0, defaultFont, defaultFontGlyphs()
+  w = measureBMFont(defaultFontGlyphs(), s)
+  printBMFont defaultFont, defaultFontGlyphs(), s, vgaWidth - w - 4, 0
 End Sub
 
 
@@ -120,9 +120,9 @@ end sub
 sub ExDraw
   cls , CornflowerBlue
 
-  spr defaultFont.imgHandle, 10, 10
+  ' spr defaultFont.imgHandle, 10, 10
 
-  printBMFont "Hello world!", 10, 10, defaultFont, defaultFontGlyphs()
+  printBMFont defaultFont, defaultFontGlyphs(), "Hello world!", 10, 10
 
   drawMouse
   drawFPS

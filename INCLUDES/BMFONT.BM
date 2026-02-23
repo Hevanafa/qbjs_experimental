@@ -128,14 +128,14 @@ sub freeBMFont(font as TBMFont, fontGlyphs() as TBMFontGlyph)
   dim temp as TBMFontGlyph
 
   ' freeImage font.imgHandle
-  
+
   font = tempFont
   for a=lbound(fontGlyphs) to ubound(fontGlyphs)
     fontGlyphs(a) = temp
   next
 end sub
 
-sub printBMFont(text as string, x as integer, y as integer, font as TBMFont, fontGlyphs() as TBMFontGlyph)
+sub printBMFont(font as TBMFont, fontGlyphs() as TBMFontGlyph, text as string, x as integer, y as integer)
   if not isImageSet(font.imgHandle) then exit sub
 
   dim as string ch
@@ -156,7 +156,7 @@ sub printBMFont(text as string, x as integer, y as integer, font as TBMFont, fon
 end sub
 
 ' Used to have `font as TBMFont`
-function measureBMFont%(text as string, fontGlyphs() as TBMFontGlyph)
+function measureBMFont%(fontGlyphs() as TBMFontGlyph, text as string)
   dim as integer a, result, charcode
   dim as string ch
   result = 0
