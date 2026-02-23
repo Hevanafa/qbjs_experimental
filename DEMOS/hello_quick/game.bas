@@ -1,11 +1,24 @@
 $if web then
 import Console from "lib\web\console.bas"
+' Anything above import lines are deleted
+
+$if javascript then
+// HTML5 canvas out-of-focus fix
+window.setTimeout(() => {
+  "use strict";
+
+  const canvas = document.getElementById("gx-canvas")
+  canvas.addEventListener("click", () => {
+    canvas.tabIndex = 0
+    canvas.focus()
+  })
+}, 1000)
+$endif
 $endif
 
 Option _Explicit
 
 '$include: 'INCLUDES\BOOL.BI'
-
 '$include: 'INCLUDES\SHAPES.BI'
 '$include: 'INCLUDES\BITMAP.BI'
 '$include: 'INCLUDES\BMFONT.BI'
