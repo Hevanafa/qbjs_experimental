@@ -17,7 +17,7 @@ Option _Explicit
 const quot = chr$(34)
 const TargetFPS = 60
 
-const SC_ESCAPE = &h01
+const K_ESC = 27
 
 const CornflowerBlue = &hFF6495ED
 
@@ -46,6 +46,7 @@ loop
 
 ' Cleanup
 
+showMouse
 system
 
 
@@ -96,8 +97,10 @@ sub ExUpdate
   updateDeltaTime
   incrementFPS
 
-  If lastEsc <> isKeyDown(SC_ESCAPE) Then
-    lastEsc = isKeyDown(SC_ESCAPE)
+  updateMouse
+
+  If lastEsc <> isKeyDown(K_ESC) Then
+    lastEsc = isKeyDown(K_ESC)
 
     if lastEsc then done = qbTrue
   end if
@@ -108,7 +111,9 @@ end sub
 sub ExDraw
   cls , CornflowerBlue
 
-  printBMFont defaultFont, defaultFontGlyphs(), "Hello world!", 10, 10
+  spr defaultFont.imgHandle, 10, 10
+
+  printBMFont "Hello world!", 10, 10, defaultFont, defaultFontGlyphs()
 
   drawMouse
   drawFPS
