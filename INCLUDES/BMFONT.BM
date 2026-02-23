@@ -109,6 +109,7 @@ $else
 $endif
 end sub
 
+
 sub cloneBMFont(sourceRef as TBMFont, targetRef as TBMFont)
 $if web then
   clone sourceRef, targetRef
@@ -120,12 +121,14 @@ $endif
 end sub
 
 
+' This doesn't free the image handle
 sub freeBMFont(font as TBMFont, fontGlyphs() as TBMFontGlyph)
   dim a as integer
   dim tempFont as TBMFont
   dim temp as TBMFontGlyph
 
-  freeImage font.imgHandle
+  ' freeImage font.imgHandle
+  
   font = tempFont
   for a=lbound(fontGlyphs) to ubound(fontGlyphs)
     fontGlyphs(a) = temp
