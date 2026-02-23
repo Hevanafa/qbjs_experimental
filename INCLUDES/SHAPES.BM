@@ -1,7 +1,7 @@
 $IncludeOnce
 
-function rectIntersects% (self as TRect, other as TRect)
-  rectIntersects = (other.x < self.x + self.width) and _
+function zoneIntersects% (self as TZone, other as TZone)
+  zoneIntersects = (other.x < self.x + self.width) and _
     (self.x < other.x + other.width) and _
     (other.y < self.y + self.height) and _
     (self.y < other.y + other.height)
@@ -9,9 +9,9 @@ end function
 
 ' Uses 1 as the threshold
 ' returns: boolean
-function rectAtEdge% (self as TRect, bounds as TRect)
+function zoneAtEdge% (self as TZone, bounds as TZone)
   ' top, right, bottom, left
-  rectAtEdge = (self.y <= bounds.y + 1) or _
+  zoneAtEdge = (self.y <= bounds.y + 1) or _
     (self.x + self.width >= bounds.x + bounds.width - 1) or _
     (self.y + self.height >= bounds.y + bounds.height - 1) or _
     (self.x <= bounds.x + 1)

@@ -5,15 +5,14 @@ type TPoint
 end type
 
 type TLine
-  as integer x0, y0, x1, y1
+  as double x0, y0, x1, y1
 end type
 
-type TVector2
-  as double vx, vy
+type TZone
+  as double x, y, width, height
 end type
 
-' was TPhysicsRect
-type TRect
+type TPhysicsBody
   as double x, y, width, height
   as double vx, vy
 end type
