@@ -1,3 +1,4 @@
 DEMOS/*/INCLUDES/
-DEMOS/*/*.pl
 DEMOS/*/MAIN.BAS
+DEMOS/*/*.pl
+DEMOS/*/*.zip
