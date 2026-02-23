@@ -28,7 +28,7 @@ dim shared done
 dim shared as TBMFont defaultFont
 dim shared as TBMFontGlyph defaultFontGlyphs(32 to 126)
 
-dim shared imgCursor
+dim shared as long imgCursor
 
 ' Game state variables
 dim shared lastEsc
