@@ -8,8 +8,20 @@
 
 ## Building
 
+### Preprocessing
+
 ```powershell
 perl .\preprocess.pl GAME.BAS
 ```
 
+This outputs the entry point `MAIN.BAS` that is readable by QBJS
+
 You can replace `GAME.BAS` with any entry point file
+
+### Bundling to ZIP
+
+```powershell
+perl .\bundle.pl
+```
+
+This requires `MAIN.BAS` obtained from the section above
