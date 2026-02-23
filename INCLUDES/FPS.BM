@@ -18,12 +18,3 @@ Sub incrementFPS
     fps = fps + 1
   End If
 End Sub
-
-Sub drawFPS
-  dim s as string
-  dim w as integer
-
-  s = "FPS:" + Str$(lastFPS)
-  w = measureBMFont(s, defaultFontGlyphs())
-  printBMFont defaultFont, defaultFontGlyphs(), s, vgaWidth - w - 4, 0
-End Sub

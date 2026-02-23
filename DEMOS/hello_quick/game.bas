@@ -70,6 +70,15 @@ sub drawMouse
   spr imgCursor, mouseX, mouseY
 end sub
 
+Sub drawFPS
+  dim s as string
+  dim w as integer
+
+  s = "FPS:" + Str$(lastFPS)
+  w = measureBMFont(s, defaultFontGlyphs())
+  printBMFont s, vgaWidth - w - 4, 0, defaultFont, defaultFontGlyphs()
+End Sub
+
 
 sub init
   initLogger
