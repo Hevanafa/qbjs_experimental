@@ -23,9 +23,7 @@ Sub drawFPS
   dim s as string
   dim w as integer
 
-  ' Color &HFFFFFF00
   s = "FPS:" + Str$(lastFPS)
   w = measureBMFont(s, defaultFontGlyphs())
-  Label s, vgaWidth - w - 4, 0
-  ' Color &HFFFFFFFF
+  printBMFont defaultFont, defaultFontGlyphs(), s, vgaWidth - w - 4, 0
 End Sub

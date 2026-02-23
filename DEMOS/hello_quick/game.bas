@@ -10,7 +10,6 @@ Option _Explicit
 '$include: 'INCLUDES\BITMAP.BI'
 '$include: 'INCLUDES\BMFONT.BI'
 '$include: 'INCLUDES\FPS.BI'
-'$include: 'INCLUDES\KEYBOARD.BI'
 '$include: 'INCLUDES\MOUSE.BI'
 '$include: 'INCLUDES\TIMING.BI'
 '$include: 'INCLUDES\VGA.BI'
@@ -18,14 +17,21 @@ Option _Explicit
 const quot = chr$(34)
 const TargetFPS = 60
 
+const SC_ESCAPE = &h01
+
 const CornflowerBlue = &hFF6495ED
 
 dim shared done
 
+' Asset variables
+
 dim shared as TBMFont defaultFont
-dim shared as TBMFontGlyph defaultFontGlyphs
+dim shared as TBMFontGlyph defaultFontGlyphs(32 to 126)
 
 dim shared imgCursor
+
+' Game state variables
+dim shared lastEsc
 
 
 ' Entry point
@@ -49,6 +55,11 @@ system
 '$include: 'INCLUDES\BITMAP.BM'
 '$include: 'INCLUDES\BMFONT.BM'
 '$include: 'INCLUDES\CONV.BM'
+'$include: 'INCLUDES\FPS.BM'
+'$include: 'INCLUDES\LOGGER.BM'
+'$include: 'INCLUDES\KEYBOARD.BM'
+'$include: 'INCLUDES\MOUSE.BM'
+'$include: 'INCLUDES\QBJS.BM'
 '$include: 'INCLUDES\STRINGS.BM'
 '$include: 'INCLUDES\TIMING.BM'
 '$include: 'INCLUDES\PANIC.BM'
@@ -77,7 +88,11 @@ end sub
 
 
 sub ExUpdate
+  If lastEsc <> isKeyDown(SC_ESCAPE) Then
+    lastEsc = isKeyDown(SC_ESCAPE)
 
+    if lastEsc then done = qbTrue
+  end if
 end sub
 
 sub ExDraw
