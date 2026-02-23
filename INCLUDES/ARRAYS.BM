@@ -1,0 +1,18 @@
+$IncludeOnce
+
+' Works for 1-dimensional array
+' QBJS Exclusive
+function qbToJSArray (qbArray)
+$if javascript then
+  const [lbound, ubound] = [qbArray._dimensions[0].l, qbArray._dimensions[0].u]
+  const resultAry = []
+
+  for (let a=lbound; a<=ubound; a++)
+    if (qbArray[a] != null)
+      resultAry.push(qbArray[a].value)
+    else
+      resultAry.push(null);
+
+  return resultAry
+$endif
+end function

@@ -1,0 +1,48 @@
+$IncludeOnce
+
+sub sprRotate(imgHandle as long, cx as integer, cy as integer, rotation as double)
+  if not isImageSet(imgHandle) then exit sub
+
+  dim as double x1, y1, x2, y2, x3, y3, x4, y4
+  dim as integer w, h, halfW, halfH
+  dim as double sinTheta, cosTheta
+
+  ' Origin: middle
+  w = _width(imgHandle)
+  h = _height(imgHandle)
+  halfW = w \ 2
+  halfH = h \ 2
+  sinTheta = sin(rotation)
+  cosTheta = cos(rotation)
+
+  ' Rotate each corner
+  x1 = cx + (-halfW * cosTheta + halfH * sinTheta)
+  y1 = cy + (-halfW * sinTheta - halfH * cosTheta)
+
+  x2 = cx + (halfW * cosTheta + halfH * sinTheta)
+  y2 = cy + (halfW * sinTheta - halfH * cosTheta)
+
+  x3 = cx + (-halfW * cosTheta - halfH * sinTheta)
+  y3 = cy + (-halfW * sinTheta + halfH * cosTheta)
+
+  x4 = cx + (halfW * cosTheta - halfH * sinTheta)
+  y4 = cy + (halfW * sinTheta + halfH * cosTheta)
+
+  ' Top left
+  _MapTriangle (0, 0)-(w-1, 0)-(0, h-1), imgHandle to (x1, y1)-(x2, y2)-(x3, y3)
+  ' Bottom right
+  _MapTriangle (w-1, 0)-(0, h-1)-(w-1, h-1), imgHandle to (x2, y2)-(x3, y3)-(x4, y4)
+end sub
+
+
+$If UseCamera then
+
+sub sprRotateWithCamera(imgHandle as long, cx as integer, cy as integer, rotation as double)
+$if UseScreenShake then
+  sprRotate imgHandle, cx - cameraX + shakeX, cy - cameraY + shakeY, rotation
+$else
+  sprRotate imgHandle, cx - cameraX, cy - cameraY, rotation
+$endif
+end sub
+
+$endif

@@ -1,0 +1,113 @@
+$IncludeOnce
+
+' Accommodated for QBJS
+function loadSound& (filename as string)
+  dim result as long
+
+  ' if isSoundLoaded(result) then
+  '   console.log "Warning: Handle " + i32str(result) + " is already loaded!"
+  ' end if
+
+  result = _sndopen(filename)
+  ' console.log "result " + result
+  ' console.log "isSoundLoaded(result): " + isSoundLoaded(result)
+
+  if not isSoundLoaded(result) then
+    panicHalt "loadSound: Couldn't load " + quot + filename + quot + "!"
+  end if
+  
+  console.log "Loaded " + filename + " as handle " + result
+
+  setSoundVolume result, 0.5
+
+  loadSound = result
+end sub
+
+sub playSound(sndHandle as long)
+  if not isSoundLoaded(sndHandle) then
+    if PanicOnNil then
+      panicHalt "playSound: sndHandle " + sndHandle + " is unset"
+    else
+      exit sub
+    end if
+  end if
+
+  ' console.log "playSound: Attempting to play " + sndHandle
+  _SndPlay sndHandle
+end sub
+
+sub freeSound(sndHandle as long)
+  if not isSoundLoaded(sndHandle) then exit sub
+  _sndclose sndHandle
+  console.log "Freed sound handle " + i32str(sndHandle)
+end sub
+
+sub loopSound(sndHandle as long)
+  if not isSoundLoaded(sndHandle) then exit sub
+  
+  console.log "loopSound " + sndHandle
+  _sndloop sndHandle
+end sub
+
+sub pauseSound(sndHandle as long)
+  if not isSoundLoaded(sndHandle) then exit sub
+  _sndpause sndHandle
+end sub
+
+sub seekSound(sndHandle as long, position as single)
+  if not isSoundLoaded(sndHandle) then exit sub
+
+$if WEB then
+$else
+  _sndsetpos sndHandle, position
+$endif
+end sub
+
+
+function isSoundPaused% (sndHandle as long)
+  if not isSoundLoaded(sndHandle) then
+    isSoundPaused = qbFalse
+    exit function
+  end if
+
+$if web then
+$if javascript then
+  // Not possible because `GX._sounds` is only accessible
+  // from its execution context
+  // if (GX.sounds == null)
+  //   GX.sounds = () => GX._sounds;
+$endif
+$else
+  isSoundPaused = _sndpaused(sndHandle)
+$endif
+end function
+
+sub stopSound(sndHandle as long)
+  if not isSoundLoaded(sndHandle) then exit sub
+  _sndstop sndHandle
+end sub
+
+sub setSoundVolume(sndHandle as long, newVolume as single)
+  if not isSoundLoaded(sndHandle) then exit sub
+
+$if Web then
+$if Javascript then
+  GX.soundVolume(sndHandle, await func_f32clamp(newVolume * 100, 0.0, 100.0))
+$endif
+$else
+  _sndvol sndHandle, f32clamp(newVolume, 0.0, 1.0)
+$endif
+end sub
+
+function isSoundLoaded% (sndHandle as long)
+  dim as integer result
+
+$if WEB then
+  result = -(sndHandle > 0)
+$else
+  result = (sndHandle > 0)
+$endif
+
+  ' console.log "isSoundLoaded for handle " + sndHandle + ": " + result
+  isSoundLoaded = result
+end function

@@ -1,0 +1,109 @@
+$IncludeOnce
+
+Function clamp# (value As Double, min As Double, max As Double)
+  If value < min Then
+    clamp = min
+  ElseIf value > max Then
+    clamp = max
+  Else
+    clamp = value
+  End If
+End Function
+
+' a: start value
+' z: end value
+' perc: 0.0 .. 1.0 (inclusive)
+Function lerp# (a As Double, z As Double, perc As Double)
+  perc = clamp(perc, 0.0, 1.0)
+  lerp = a + perc * (z - a)
+End Function
+
+function easeInSine#(perc as double)
+  easeInSine = 1 - cos(perc * _PI / 2)
+end function
+
+function easeOutSine# (perc as double)
+  easeOutSine = sin(perc * _PI / 2)
+end function
+
+function easeInOutSine# (perc as double)
+  easeInOutSine = -(cos(_PI * perc) - 1) / 2
+end function
+
+function easeOutQuart# (perc as double)
+  easeOutQuart = 1 - (1 - perc) ^ 4
+end function
+
+function lerpEaseInSine# (a as double, z as double, perc as double)
+  perc = clamp(perc, 0.0, 1.0)
+  perc = easeInSine(perc)
+  lerpEaseInSine = a + perc * (z - a)
+end function
+
+function lerpEaseOutSine# (a as double, z as double, perc as double)
+  perc = clamp(perc, 0.0, 1.0)
+  perc = easeOutSine(perc)
+  lerpEaseOutSine = a + perc * (z - a)
+end function
+
+function lerpEaseInOutSine# (a as double, z as double, perc as double)
+  perc = clamp(perc, 0.0, 1.0)
+  perc = easeInOutSine(perc)
+  lerpEaseInOutSine = a + perc * (z - a)
+end function
+
+function lerpEaseOutQuart# (a as double, z as double, perc as double)
+  perc = clamp(perc, 0.0, 1.0)
+  perc = easeOutQuart(perc)
+  lerpEaseOutQuart = a + perc * (z - a)
+end function
+
+
+' duration: in seconds
+sub initLerpReal(lt as TLerpTimer, duration as double)
+  ' lt.active = qbTrue
+  lt.startTick = getTimer
+  lt.endTick = getTimer + duration
+end sub
+
+' Must be called after any of the `initLerp`, doesn't change the `active` field
+' duration: in seconds
+sub delayLerp(lt as TLerpTimer, duration as double)
+  lt.startTick = lt.startTick + duration
+  lt.endTick = lt.endTick + duration
+end sub
+
+' duration: in seconds
+sub initLerpGame(lt as TLerpTimer, duration as double)
+  ' lt.active = qbTrue
+  lt.startTick = gameTime
+  lt.endTick = gameTime + duration
+end sub
+
+function getLerpPercReal#(lt as TLerpTimer)
+  getLerpPercReal = clamp((getTimer - lt.startTick) / (lt.endTick - lt.startTick), 0.0, 1.0)
+end function
+
+function getLerpPercGame#(lt as TLerpTimer)
+  getLerpPercGame = clamp((gameTime - lt.startTick) / (lt.endTick - lt.startTick), 0.0, 1.0)
+end function
+
+function isLerpActiveReal% (lt as TLerpTimer)
+  isLerpActiveReal = qbBool(lt.startTick <= getTimer) and qbBool(getTimer < lt.endTick)
+end function
+
+function isLerpActiveGame% (lt as TLerpTimer)
+  isLerpActiveGame = qbBool(lt.startTick <= gameTime) and qbBool(gameTime < lt.endTick)
+end function
+
+function isLerpCompleteReal%(lt as TLerpTimer)
+  isLerpCompleteReal = qbBool(getTimer >= lt.endTick)
+end function
+
+function isLerpCompleteGame%(lt as TLerpTimer)
+  isLerpCompleteGame = qbBool(gameTime >= lt.endTick)
+end function
+
+function LerpStr$(lt as TLerpTimer)
+  LerpStr = "{ " + f32str(lt.startTick) + ", " + f32str(lt.endTick) + " }"
+end function

@@ -1,0 +1,33 @@
+$IncludeOnce
+
+Sub NPrint (text As String, x As Integer, y As Integer, colour As Long)
+  Dim lastColour: lastColour = _DefaultColor
+  Color colour
+  _PrintString (x, y), text
+  Color lastColour
+End Sub
+
+Sub NPset (x As Integer, y As Integer, colour As Long)
+  PSet (x, y), colour
+End Sub
+
+Sub initBuffer
+  vgaSurface = _NewImage(vgaWidth, vgaHeight, 32)
+  vgaScaled = _NewImage(vgaWidth * vgaScale, vgaHeight * vgaScale, 32)
+End Sub
+
+sub startScaledMode
+  Screen vgaScaled
+  _Dest vgaSurface
+  _Delay 0.1
+  _Display
+end sub
+
+sub initTextMode
+  screen 0
+end sub
+
+sub flush
+  _PutImage , vgaSurface, vgaScaled
+  _Display
+end sub

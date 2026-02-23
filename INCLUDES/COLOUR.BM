@@ -1,0 +1,32 @@
+$IncludeOnce
+
+' &hFF6495ED
+Sub parseTColour (full As _unsigned Long, outref As TColour)
+  outref.a = _ShR(full, 24)
+  outref.r = _ShR(full, 16) Mod 256
+  outref.g = _ShR(full, 8) Mod 256
+  outref.b = full Mod 256
+End Sub
+
+Sub printTColour (colour As TColour)
+  Print i32str(colour.r) + ", " + i32str(colour.g) + ", " + i32str(colour.b) + ", " + i32str(colour.a)
+End Sub
+
+function TColourStr$(colour as TColour)
+  TColourStr = "&h" + _
+    right$("0" + hex$(colour.a), 2) + _
+    right$("0" + hex$(colour.r), 2) + _
+    right$("0" + hex$(colour.g), 2) + _
+    right$("0" + hex$(colour.b), 2)
+end function
+
+function TColourLong&(colour as TColour)
+  TColourLong = _shl(colour.a, 24) + _shl(colour.r, 16) + _shl(colour.g, 8) + colour.b
+end function
+
+sub lerpColour(c1 as TColour, c2 as TColour, perc as double, outref as TColour)
+  outref.a = lerp(c1.a, c2.a, perc)
+  outref.r = lerp(c1.r, c2.r, perc)
+  outref.g = lerp(c1.g, c2.g, perc)
+  outref.b = lerp(c1.b, c2.b, perc)
+end sub

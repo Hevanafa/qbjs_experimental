@@ -1,0 +1,756 @@
+$IncludeOnce
+
+' Begin boilerplate code
+sub initImmediateGUI
+  hotWidget = -1
+  activeWidget = -1
+  nextWidgetID = 0
+
+  ' Immediate GUI
+  mouseZone.x = 0
+  mouseZone.y = 0
+  mouseZone.width = 1
+  mouseZone.height = 1
+end sub
+
+' Call this in the update routine
+sub resetWidgetIndices
+  hotWidget = -1
+  nextWidgetID = 0
+
+  ' specific to ZGGJ 2
+  clickConsumed = qbFalse
+end sub
+
+' Important: Must be placed at the end of the draw routine
+sub resetActiveWidget
+  If mouseJustReleased And (activeWidget >= 0) Then activeWidget = -1
+end sub
+
+' Call this in the update routine
+sub updateTooltip
+  ' Tooltip
+  If lastMouseX <> mouseX Then
+    lastMouseX = mouseX
+    tooltipShowTick = getTimer + 0.5
+  End If
+
+  If lastMouseY <> mouseY Then
+    lastMouseY = mouseY
+    tooltipShowTick = getTimer + 0.5
+  End If
+end sub
+
+' Called before updateMouse
+sub updateLastMouseButton
+  lastMouseButton = mouseButton
+end sub
+
+' Called after updateMouse
+sub updateMouseZone
+  mouseZone.x = mouseX
+  mouseZone.y = mouseY
+
+  mouseJustPressed = (mouseButton <> MouseButtonNone) and (lastMouseButton = MouseButtonNone)
+  mouseJustReleased = (mouseButton = MouseButtonNone) and (lastMouseButton <> MouseButtonNone)
+end sub
+
+
+' Begin widgets
+
+Sub Label (caption As String, x As Integer, y As Integer)
+  printBMFont caption, x, y, defaultFont, defaultFontGlyphs()
+End Sub
+
+sub LabelCentred(text as string, y as integer)
+  dim w as integer
+  w = measureBMFont(text, defaultFontGlyphs())
+  Label text, (vgaWidth - w) \ 2, y
+end sub
+
+Sub LabelMultiline (caption As String, x As Integer, y As Integer)
+  dim as integer a
+  dim as string lines(0 to 2)
+
+  split caption, qbLf, lines()
+
+  for a=0 to ubound(lines)
+    printBMFont lines(a), x, y + defaultFont.lineHeight * a, defaultFont, defaultFontGlyphs()
+  next
+End Sub
+
+Function Button% (caption As String, x As Integer, y As Integer, width As Integer, height As Integer)
+  Dim zone As TRect
+  Dim thisWidgetID As Integer
+  Dim buttonColour As _Unsigned Long
+
+  zone.x = x
+  zone.y = y
+  zone.width = width
+  zone.height = height
+
+  ' Update logic
+  thisWidgetID = nextWidgetID
+  nextWidgetID = nextWidgetID + 1
+
+  If rectIntersects(zone, mouseZone) Then
+    hotWidget = thisWidgetID
+
+    If mouseJustPressed Then activeWidget = thisWidgetID
+  End If
+
+  ' Render logic
+  If activeWidget = thisWidgetID Then
+    buttonColour = IceCreamRed
+  ElseIf hotWidget = thisWidgetID Then
+    buttonColour = IceCreamOrange
+  Else
+    buttonColour = IceCreamWhite
+  End If
+
+  rectfill zone.x, zone.y, zone.x + zone.width, zone.y + zone.height, buttonColour
+  rect zone.x, zone.y, zone.x + zone.width, zone.y + zone.height, IceCreamWhite
+  Label caption, zone.x + 4, zone.y + 4
+
+  If mouseJustReleased And (hotWidget = thisWidgetID) And (activeWidget = thisWidgetID) Then
+    ' activeWidget = -1  ' Index reset is handled at the end of NDraw
+    Button = qbTrue
+  Else
+    Button = qbFalse
+  End If
+End Function
+
+Function ImageButton% (x As Integer, y As Integer, imgNormal As Long, imgHovered As Long, imgPressed As Long)
+  Dim zone As TRect
+  Dim thisWidgetID As Integer
+  Dim buttonImgHandle As Long
+  
+  zone.x = x
+  zone.y = y
+  zone.width = getImgWidth(imgNormal)
+  zone.height = getImgHeight(imgNormal)
+
+  ' Update logic
+  thisWidgetID = nextWidgetID
+  nextWidgetID = nextWidgetID + 1
+
+  If rectIntersects(zone, mouseZone) Then
+    hotWidget = thisWidgetID
+
+    If mouseJustPressed Then activeWidget = thisWidgetID
+  End If
+
+  ' Render logic
+  If activeWidget = thisWidgetID Then
+    buttonImgHandle = imgPressed
+  ElseIf hotWidget = thisWidgetID Then
+    buttonImgHandle = imgHovered
+  Else
+    buttonImgHandle = imgNormal
+  End If
+
+  spr buttonImgHandle, x, y
+
+  If mouseJustReleased And (hotWidget = thisWidgetID) And (activeWidget = thisWidgetID) Then
+    ' activeWidget = -1  ' Index reset is handled at the end of NDraw
+    ImageButton = qbTrue
+  Else
+    ImageButton = qbFalse
+  End If
+End Function
+
+
+Function ButtonWithTooltip% (caption As String, x As Integer, y As Integer, width As Integer, height As Integer, tooltip As String)
+  Dim As Integer result
+  Dim As Integer thisWidgetID
+
+  ' Assume thisWidgetID by the result of calling Button function
+  thisWidgetID = nextWidgetID
+  result = Button(caption, x, y, width, height)
+
+  If hotWidget = thisWidgetID Then
+    SetTooltip tooltip, mouseX + 10, mouseY + 10
+  End If
+
+  ButtonWithTooltip = result
+End Function
+
+Sub SetTooltip (text As String, x As Integer, y As Integer)
+  tooltipText = text
+  tooltipX = x
+  tooltipY = y
+End Sub
+
+
+' Must be called before resetTooltip
+sub RenderTooltip
+  Dim w As Integer
+
+  If (getTimer >= tooltipShowTick) And (tooltipText <> "") Then
+    w = measureBMFont(tooltipText, defaultFontGlyphs())
+    rectfill tooltipX, tooltipY, tooltipX + w + 4, tooltipY + defaultFont.lineHeight + 4, white
+    printBMFont tooltipText, tooltipX + 2, tooltipY + 2, defaultFont, defaultFontGlyphs()
+    rect tooltipX, tooltipY, tooltipX + w + 4, tooltipY + defaultFont.lineHeight + 4, black
+  End If
+end sub
+
+' Must be called after renderTooltip
+sub ResetTooltip
+  If hotWidget = -1 Then tooltipText = ""
+end sub
+
+
+' BYREF state as boolean
+Sub Checkbox (caption As String, x As Integer, y As Integer, state As TCheckboxState)
+  Dim zone As TRect
+  Dim w As Integer
+  Dim thisWidgetID As Integer
+  Dim checkboxColour As _Unsigned Long
+
+  zone.x = x
+  zone.y = y
+  
+  w = measureBMFont(caption, defaultFontGlyphs())
+  zone.width = w + 6
+  zone.height = defaultFont.lineHeight
+
+  ' Update logic
+  thisWidgetID = nextWidgetID
+  nextWidgetID = nextWidgetID + 1
+
+  If rectIntersects(zone, mouseZone) Then
+    hotWidget = thisWidgetID
+
+    If mouseJustPressed Then activeWidget = thisWidgetID
+  End If
+
+  ' Render logic
+  ' drawZone zone, green
+
+  If state.checked Then
+    rectfill zone.x, zone.y, zone.x + 5, zone.y + 5, black
+  Else
+    rectfill zone.x, zone.y, zone.x + 5, zone.y + 5, white
+  End If
+
+  If activeWidget = thisWidgetID Then
+    ' on held down
+    checkboxColour = IceCreamRed
+  ElseIf hotWidget = thisWidgetID Then
+    ' on hover
+    checkboxColour = IceCreamOrange
+  Else
+    checkboxColour = black
+  End If
+
+  rect zone.x, zone.y, zone.x + 5, zone.y + 5, checkboxColour
+  Label caption, zone.x + 7, zone.y
+
+  If mouseJustReleased And (hotWidget = thisWidgetID) And (activeWidget = thisWidgetID) Then
+    ' activeWidget = -1  ' Index reset is handled at the end of NDraw
+    state.checked = Not state.checked
+  End If
+End Sub
+
+
+' BYREF value as integer
+Sub Slider (x As Integer, y As Integer, width As Integer, state As TSliderState, minValue As Integer, maxValue As Integer)
+  Dim zone As TRect
+  Dim thisWidgetID As Integer
+  Dim As Double perc, range
+  Dim As Integer pendingValue, thumbX
+  Dim sliderColour As _Unsigned Long
+
+  If minValue >= maxValue Then panicHalt "Slider: minValue has to be less than maxValue!"
+
+  zone.x = x
+  zone.y = y
+  zone.width = width
+  zone.height = 5
+
+  ' Update logic
+  thisWidgetID = nextWidgetID
+  nextWidgetID = nextWidgetID + 1
+
+  If rectIntersects(zone, mouseZone) Then
+    hotWidget = thisWidgetID
+
+    If mouseJustPressed Then activeWidget = thisWidgetID
+  End If
+
+  ' Value update logic
+  range = maxValue - minValue
+  If activeWidget = thisWidgetID Then
+    pendingValue = f32clamp(mouseX, x, x + width) - x
+    perc = pendingValue / width
+
+    state.value = CInt(perc * range)
+  End If
+
+  ' Render logic
+  ' drawZone zone, green
+
+  nLine x, y + 2, x + width, y + 2, black
+
+  ' console.log "value is " + state.value
+  perc = (state.value - minValue) / range
+  thumbX = CInt(x + perc * width)
+
+  rectfill thumbX - 2, zone.y, thumbX + 2, zone.y + 4, white
+
+  If activeWidget = thisWidgetID Then
+    ' dragging
+    sliderColour = IceCreamRed
+  ElseIf hotWidget = thisWidgetID Then
+    ' hovering
+    sliderColour = IceCreamOrange
+  Else
+    sliderColour = black
+  End If
+  rect thumbX - 2, zone.y, thumbX + 2, zone.y + 4, sliderColour
+End Sub
+
+
+sub sprNineSlice(imgHandle as long, x as integer, y as integer, width as integer, height as integer, margins as TNineSliceMargins)
+  dim as integer srcCentreW, srcCentreH, destCentreW, destCentreH
+
+  if not isImageSet(imgHandle) then panicHalt "sprNineSlice: imgHandle is" + str$(imgHandle) + "!"
+
+  srcCentreW = _width(imgHandle) - margins.left - margins.right
+  srcCentreH = _height(imgHandle) - margins.top - margins.bottom
+  destCentreW = width - margins.left - margins.right
+  destCentreH = height - margins.top - margins.bottom
+
+  ' Middle fill: srcImage, src, dest
+  sprRegionStretched imgHandle, _
+    margins.left, margins.top, srcCentreW, srcCentreH, _
+    x + margins.left, y + margins.top, destCentreW, destCentreH
+
+  ' Top side: srcImage, src, dest
+  sprRegionStretched imgHandle, _
+    margins.left, 0, srcCentreW, margins.top, _
+    x + margins.left, y, destCentreW, margins.top
+  
+  ' Bottom side
+  sprRegionStretched imgHandle, _
+    margins.left, _height(imgHandle) - margins.bottom, srcCentreW, margins.bottom, _
+    x + margins.left, y + height - margins.bottom, destCentreW, margins.bottom
+
+  ' Left side
+  sprRegionStretched imgHandle, _
+    0, margins.top, margins.left, srcCentreH, _
+    x, y + margins.top, margins.left, destCentreH
+
+  ' Right side
+  sprRegionStretched imgHandle, _
+    _width(imgHandle) - margins.right, margins.top, margins.right, srcCentreH, _
+    x + width - margins.right, y + margins.top, margins.right, destCentreH
+
+
+  ' Corners
+  ' top left, top right, bottom left, bottom right
+  sprRegion imgHandle, 0, 0, margins.left, margins.top, x, y
+  sprRegion imgHandle, _width(imgHandle) - margins.right, 0, margins.right, margins.top, x + width - margins.right, y
+  sprRegion imgHandle, 0, _height(imgHandle) - margins.bottom, margins.left, margins.bottom, x, y + height - margins.bottom
+  sprRegion imgHandle, _width(imgHandle) - margins.right, _height(imgHandle) - margins.bottom, margins.right, margins.bottom, x + width - margins.right, y + height - margins.bottom
+end sub
+
+Function NineSliceButton% (caption as string, x as integer, y as integer, width as integer, height as integer, margins as TNineSliceMargins, imgNormal as long, imgHovered as long, imgPressed as long)
+  Dim zone As TRect
+  Dim thisWidgetID As Integer
+  Dim buttonImgHandle As Long
+
+  zone.x = x
+  zone.y = y
+  zone.width = width
+  zone.height = height
+
+  ' Update logic
+  thisWidgetID = nextWidgetID
+  nextWidgetID = nextWidgetID + 1
+
+  If rectIntersects(zone, mouseZone) Then
+    hotWidget = thisWidgetID
+
+    If mouseJustPressed Then activeWidget = thisWidgetID
+  End If
+
+  ' Render logic
+  If activeWidget = thisWidgetID Then
+    buttonImgHandle = imgPressed
+  ElseIf hotWidget = thisWidgetID Then
+    buttonImgHandle = imgHovered
+  Else
+    buttonImgHandle = imgNormal
+  End If
+
+  ' drawZone zone, green
+
+  sprNineSlice buttonImgHandle, x, y, width, height, margins
+
+  ' rectfill zone.x, zone.y, zone.x + zone.width, zone.y + zone.height, buttonColour
+  ' rect zone.x, zone.y, zone.x + zone.width, zone.y + zone.height, IceCreamWhite
+  Label caption, zone.x + margins.left, zone.y + margins.top
+
+  If mouseJustReleased And (hotWidget = thisWidgetID) And (activeWidget = thisWidgetID) Then
+    ' activeWidget = -1  ' Index reset is handled at the end of NDraw
+    NineSliceButton = qbTrue
+  Else
+    NineSliceButton = qbFalse
+  End If
+end function
+
+
+' Returns qbTrue when Enter is pressed (submitted)
+function InputBox% (x as integer, y as integer, width as integer, state as TInputBoxState)
+  Dim zone As TRect
+  Dim thisWidgetID As Integer
+  dim inputBoxColour as _unsigned long
+  
+  dim as string k
+  dim as integer keycode, extendedCode
+
+  ' dim as string visibleText
+  dim as integer textWidth, cursorX
+
+  zone.x = x
+  zone.y = y
+  zone.width = width
+  zone.height = defaultFont.lineHeight + 4
+
+  ' Update logic
+  thisWidgetID = nextWidgetID
+  nextWidgetID = nextWidgetID + 1
+
+  ' Focus detection
+  If rectIntersects(zone, mouseZone) Then
+    hotWidget = thisWidgetID
+
+    If mouseJustPressed Then
+      ' activeWidget = thisWidgetID
+      focusedInputID = thisWidgetID
+      state.isFocused = qbTrue
+    end if
+  End If
+
+  ' Lose focus
+  if mouseJustPressed and (hotWidget <> thisWidgetID) and (focusedInputID = thisWidgetID) then
+    focusedInputID = -1
+    state.isFocused = qbFalse
+  end if
+
+  if focusedInputID = thisWidgetID then
+    ' _keyclear
+    k = inkey$
+
+    if k <> "" then
+      keycode = asc(k)
+
+      ' console.log "keycode: " + keycode
+      ' console.log "maxLength: " + state.maxLength
+
+      select case keycode
+      case 0  ' Extended keys
+        if len(k) = 2 then
+          extendedCode = asc(right$(k, 1))
+
+          select case extendedCode
+            case 75  ' Left
+              if state.cursorPos > 0 then
+                state.cursorPos = state.cursorPos - 1
+              end if
+
+            case 77  ' Right
+              if state.cursorPos < len(state.text) then
+                state.cursorPos = state.cursorPos + 1
+              end if
+
+            case 71  ' Home
+              state.cursorPos = 0
+            case 79  ' End
+              state.cursorPos = len(state.text)
+
+            case 83  ' Delete
+              if state.cursorPos < len(state.text) then
+                state.text = left$(state.text, state.cursorPos) + mid$(state.text, state.cursorPos + 2)
+              end if
+          end select
+        end if
+
+      case 8  ' Backspace
+        if state.cursorPos > 0 then
+          state.text = left$(state.text, state.cursorPos - 1) + mid$(state.text, state.cursorPos + 1)
+          state.cursorPos = state.cursorPos - 1
+        end if
+
+      case 13  ' Enter
+        ' Submit
+        InputBox = qbTrue
+        focusedInputID = -1
+        state.isFocused = qbFalse
+
+      case 27  ' Escape
+        ' Lose focus
+        focusedInputID = -1
+        state.isFocused = qbFalse
+
+      ' case 32 to 126  ' Printable characters
+      ' TODO: Add this to quirks: CASE TO isn't supported in QBJS
+      case else
+        if (32 <= keycode) and (keycode <= 126) then
+          if len(state.text) < state.maxLength then
+            ' console.log "keycode: " + keycode
+            ' console.log "What is k? " + k
+            ' console.log "state.text: " + state.text
+
+            state.text = left$(state.text, state.cursorPos) + k + mid$(state.text, state.cursorPos + 1)
+            state.cursorPos = state.cursorPos + 1
+          end if
+        end if
+      end select
+    end if
+  end if
+
+
+  ' Render logic (doesn't handle clipping)
+  ' rectfill x, y, x + width, y + zone.height, white
+
+  ' if focusedInputID = thisWidgetID then
+  '   inputBoxColour = black
+  ' else
+  '   inputBoxColour = white
+  ' end if
+  ' rect x, y, x + width, y + zone.height, inputBoxColour
+
+  ' printBMFont state.text, x + 2, y + 2, defaultFont, defaultFontGlyphs()
+
+  ' if isInputCursorShown and (focusedInputID = thisWidgetID) then
+  '   if state.text = "" then
+  '     cursorX = x + 2
+  '   else
+  '     textWidth = measureBMFont(state.text, defaultFontGlyphs())
+  '     cursorX = x + 2 + measureBMFont(left$(state.text, state.cursorPos), defaultFontGlyphs())
+  '   end if
+
+  '   nline cursorX, y + 2, cursorX, y + defaultFont.lineHeight + 2, black
+  ' end if
+
+  ' inputBox% = qbFalse
+
+
+  ' Render logic with clipping
+  rectfill x, y, x + width, y + zone.height, white
+
+  ' Begin handle clipping
+  dim as long tempImgHandle, oldDest
+  tempImgHandle = _NewImage(width - 4, zone.height, 32)
+
+  oldDest = _dest
+  _dest tempImgHandle
+
+  cls , &hFFFFFFFF
+  if state.text <> "" then
+    dim as integer fullCursorX, availableWidth
+    availableWidth = width - 4
+    fullCursorX = measureBMFont(left$(state.text, state.cursorPos), defaultFontGlyphs())
+
+    if fullCursorX > state.startOffset + availableWidth then
+      state.startOffset = fullCursorX - availableWidth
+    elseif fullCursorX < state.startOffset then
+      state.startOffset = fullCursorX
+    end if
+
+    printBMFont state.text, -state.startOffset, 0, defaultFont, defaultFontGlyphs()
+
+    cursorX = x + 2 + fullCursorX - state.startOffset
+  else
+    cursorX = x + 2
+  end if
+
+  _dest oldDest
+
+  _PutImage (x + 2, y + 2), tempImgHandle
+
+  _FreeImage tempImgHandle
+
+  if isInputCursorShown and (focusedInputID = thisWidgetID) then
+    nline cursorX, y + 2, cursorX, y + defaultFont.lineHeight + 2, black
+  end if
+
+  ' Border
+  if focusedInputID = thisWidgetID then
+    inputBoxColour = black
+  else
+    inputBoxColour = white
+  end if
+  rect x, y, x + width, y + zone.height, inputBoxColour
+end function
+
+' Returns qbTrue when Enter is pressed (submitted)
+function NumberInputBox% (x as integer, y as integer, width as integer, state as TInputBoxState)
+  Dim zone As TRect
+  Dim thisWidgetID As Integer
+  dim inputBoxColour as _unsigned long
+  
+  dim as string k
+  dim as integer keycode, extendedCode
+
+  dim as integer cursorX
+
+  zone.x = x
+  zone.y = y
+  zone.width = width
+  zone.height = defaultFont.lineHeight + 4
+
+  ' Update logic
+  thisWidgetID = nextWidgetID
+  nextWidgetID = nextWidgetID + 1
+
+  ' Focus detection
+  If rectIntersects(zone, mouseZone) Then
+    hotWidget = thisWidgetID
+
+    If mouseJustPressed Then
+      focusedInputID = thisWidgetID
+      state.isFocused = qbTrue
+    end if
+  End If
+
+  ' Lose focus
+  if mouseJustPressed and (hotWidget <> thisWidgetID) and (focusedInputID = thisWidgetID) then
+    focusedInputID = -1
+    state.isFocused = qbFalse
+  end if
+
+  if focusedInputID = thisWidgetID then
+    ' _keyclear
+    k = inkey$
+
+    if k <> "" then
+      keycode = asc(k)
+
+      ' console.log "keycode: " + keycode
+      ' console.log "maxLength: " + state.maxLength
+
+      if (keycode = 0) and (len(k) = 2) then
+        extendedCode = asc(right$(k, 1))
+
+        ' select case extendedCode
+        '   case 71: k = "7"
+        '   case 72: k = "8"
+        '   case 73: k = "9"
+
+        '   case 75: k = "4"
+        '   case 76: k = "5"
+        '   case 77: k = "6"
+
+        '   case 79: k = "1"
+        '   case 80: k = "2"
+        '   case 81: k = "3"
+        '   case 82: k = "0"
+        ' end select
+
+        select case extendedCode
+          case 75  ' Left
+            if state.cursorPos > 0 then
+              state.cursorPos = state.cursorPos - 1
+            end if
+
+          case 77  ' Right
+            if state.cursorPos < len(state.text) then
+              state.cursorPos = state.cursorPos + 1
+            end if
+
+          case 71  ' Home
+            state.cursorPos = 0
+          case 79  ' End
+            state.cursorPos = len(state.text)
+
+          case 83  ' Delete
+            if state.cursorPos < len(state.text) then
+              state.text = left$(state.text, state.cursorPos) + mid$(state.text, state.cursorPos + 2)
+            end if
+        end select
+      end if
+
+      keycode = asc(k)
+      select case keycode
+      case 8  ' Backspace
+        if state.cursorPos > 0 then
+          state.text = left$(state.text, state.cursorPos - 1) + mid$(state.text, state.cursorPos + 1)
+          state.cursorPos = state.cursorPos - 1
+        end if
+
+      case 13  ' Enter
+        ' Submit
+        NumberInputBox = qbTrue
+        focusedInputID = -1
+        state.isFocused = qbFalse
+
+      case 27  ' Escape
+        ' Lose focus
+        focusedInputID = -1
+        state.isFocused = qbFalse
+
+      ' case 32 to 126  ' Printable characters
+      ' TODO: Add this to quirks: CASE TO isn't supported in QBJS
+      case else
+        if (48 <= keycode) and (keycode <= 57) then
+          if len(state.text) < state.maxLength then
+            state.text = left$(state.text, state.cursorPos) + k + mid$(state.text, state.cursorPos + 1)
+            state.cursorPos = state.cursorPos + 1
+          end if
+        end if
+      end select
+    end if
+  end if
+
+
+  ' Render logic with clipping
+  ' TODO: Handle right alignment
+  rectfill x, y, x + width, y + zone.height, white
+
+  ' Begin handle clipping
+  dim as long tempImgHandle, oldDest
+  tempImgHandle = _NewImage(width - 4, zone.height, 32)
+
+  oldDest = _dest
+  _dest tempImgHandle
+
+  cls , &hFFFFFFFF
+  if state.text <> "" then
+    dim as integer fullCursorX, availableWidth
+    availableWidth = width - 4
+    fullCursorX = measureBMFont(left$(state.text, state.cursorPos), defaultFontGlyphs())
+
+    if fullCursorX > state.startOffset + availableWidth then
+      state.startOffset = fullCursorX - availableWidth
+    elseif fullCursorX < state.startOffset then
+      state.startOffset = fullCursorX
+    end if
+
+    printBMFont state.text, -state.startOffset, 0, defaultFont, defaultFontGlyphs()
+
+    cursorX = x + 2 + fullCursorX - state.startOffset
+  else
+    cursorX = x + 2
+  end if
+
+  _dest oldDest
+
+  _PutImage (x + 2, y + 2), tempImgHandle
+
+  _FreeImage tempImgHandle
+
+  if isInputCursorShown and (focusedInputID = thisWidgetID) then
+    nline cursorX, y + 2, cursorX, y + defaultFont.lineHeight + 2, black
+  end if
+
+  ' Border
+  if focusedInputID = thisWidgetID then
+    inputBoxColour = black
+  else
+    inputBoxColour = white
+  end if
+  rect x, y, x + width, y + zone.height, inputBoxColour
+end function

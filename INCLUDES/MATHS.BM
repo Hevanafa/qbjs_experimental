@@ -1,0 +1,37 @@
+$IncludeOnce
+
+function atan2# (y as double, x as double)
+  dim result as double
+
+$if web then
+$if javascript then
+  result = Math.atan2(y, x)
+$endif
+  atan2 = result
+
+$else
+  atan2 = _atan2(y, x)
+$endif
+end function
+
+
+Function f32clamp# (value as double, min as double, max as double)
+  if value > max then
+    f32clamp = max
+  elseif value < min then
+    f32clamp = min
+  else
+    f32clamp = value
+  end if
+end Function
+
+
+' Returns a random number within min..max (inclusive)
+Function i32random& (min as long, max As Long)
+  ' `CINT` is the same as `round` in Pascal
+  i32random = fix(rnd * (max - min + 1)) + min
+End Function
+
+Function f32random#
+  f32random = Rnd
+End Function

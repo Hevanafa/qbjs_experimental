@@ -1,0 +1,75 @@
+$IncludeOnce
+
+sub circWithCamera(cx as integer, cy as integer, radius as integer, colour as long)
+  if UseScreenShake then
+    circ cx - cameraX + shakeX, cy - cameraY + shakeY, radius, colour
+  else
+    circ cx - cameraX, cy - cameraY, radius, colour
+  end if
+end sub
+
+sub rectWithCamera(x0 as integer, y0 as integer, x1 as integer, y1 as integer, colour as long)
+  if UseScreenShake then
+    rect x0 - cameraX + shakeX, y0 - cameraY + shakeY, x1 - cameraX + shakeX, y1 - cameraY + shakeY, colour
+  else
+    rect x0 - cameraX, y0 - cameraY, x1 - cameraX, y1 - cameraY, colour
+  end if
+end sub
+
+sub rectfillWithCamera(x0 as integer, y0 as integer, x1 as integer, y1 as integer, colour as long)
+  if UseScreenShake then
+    rectfill x0 - cameraX + shakeX, y0 - cameraY + shakeY, x1 - cameraX + shakeX, y1 - cameraY + shakeY, colour
+  else
+    rectfill x0 - cameraX, y0 - cameraY, x1 - cameraX, y1 - cameraY, colour
+  end if
+end sub
+
+sub lineWithCamera(x0, y0, x1, y1, colour as long)
+  if UseScreenShake then
+    nLine x0 - cameraX + shakeX, y0 - cameraY + shakeY, x1 - cameraX + shakeX, y1 - cameraY + shakeY, colour
+  else
+    nLine x0 - cameraX, y0 - cameraY, x1 - cameraX, y1 - cameraY, colour
+  endif
+end sub
+
+sub drawTLineWithCamera(L as TLine, colour as long)
+  dim newL as TLine
+$if web then
+  clone L, newL
+$else
+  newL = L
+$endif
+
+  if UseScreenShake Then
+    newL.x0 = newL.x0 - cameraX + shakeX
+    newL.x1 = newL.x1 - cameraX + shakeX
+    newL.y0 = newL.y0 - cameraY + shakeY
+    newL.y1 = newL.y1 - cameraY + shakeY
+  else
+    newL.x0 = newL.x0 - cameraX
+    newL.x1 = newL.x1 - cameraX
+    newL.y0 = newL.y0 - cameraY
+    newL.y1 = newL.y1 - cameraY
+  endif
+
+  drawTLine newL, colour
+end sub
+
+sub drawZoneWithCamera(zone as TRect, colour as long)
+  dim newZone as TRect
+$if WEB then
+  clone zone, newZone
+$else
+  newZone = zone
+$endif
+
+  if UseScreenShake then
+    newZone.x = newZone.x - cameraX + shakeX
+    newZone.y = newZone.y - cameraY + shakeY
+  else
+    newZone.x = newZone.x - cameraX
+    newZone.y = newZone.y - cameraY
+  end if
+
+  drawZone newZone, colour
+end sub

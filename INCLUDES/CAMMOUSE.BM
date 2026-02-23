@@ -1,0 +1,17 @@
+$IncludeOnce
+
+function getMouseXWithCamera%
+  if UseScreenShake then
+    getMouseXWithCamera = mouseX + cameraX + shakeX
+  else
+    getMouseXWithCamera = mouseX + cameraX
+  end if
+end function
+
+function getMouseYWithCamera%
+  if UseScreenShake then
+    getMouseYWithCamera = MouseY + cameraY + shakeY
+  else
+    getMouseYWithCamera = MouseY + cameraY
+  end if
+end function

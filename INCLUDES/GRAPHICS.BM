@@ -1,0 +1,29 @@
+$IncludeOnce
+
+sub circ(cx as integer, cy as integer, radius as integer, colour as long)
+  circle (cx, cy), radius, colour
+  ' circle (cx, cy), radius, colour, 0.0, 2.0 * PI, 1.0
+end sub
+
+sub rect(x0 as integer, y0 as integer, x1 as integer, y1 as integer, colour as long)
+  line (x0, y0)-(x1, y1), colour, B
+end sub
+
+sub rectfill(x0 as integer, y0 as integer, x1 as integer, y1 as integer, colour as long)
+  line (x0, y0)-(x1, y1), colour, BF
+end sub
+
+sub nLine(x0, y0, x1, y1, colour as long)
+  line (x0, y0)-(x1, y1), colour
+end sub
+
+sub drawTLine(L as TLine, colour as long)
+  nLine L.x0, L.y0, L.x1, L.y1, colour
+end sub
+
+sub drawZone(zone as TRect, colour as long)
+  rect fix(zone.x), fix(zone.y), fix(zone.x + zone.width - 1), fix(zone.y + zone.height - 1), colour
+  ' NPset zone.x, zone.y, &hFFFFFFFF
+end sub
+
+' TODO: TRI can be added

@@ -1,0 +1,32 @@
+' To be used with CAMERA.BI
+
+sub sprWithCamera(imgHandle as long, x as integer, y as integer)
+  If Not isImageSet(imgHandle) Then Exit Sub
+
+  if UseScreenShake then
+    spr imgHandle, x - cameraX + shakeX, y - cameraY + shakeY
+  else
+    spr imgHandle, x - cameraX, y - cameraY
+  end if
+end sub
+
+' flip: use sprFlip prefix defined in BITMAP.BI
+sub sprFlippedWithCamera(imgHandle as long, x as integer, y as integer, flip as integer)
+  If Not isImageSet(imgHandle) Then Exit Sub
+
+  if UseScreenShake then
+    sprFlipped imgHandle, x - cameraX + shakeX, y - cameraY + shakeY, flip
+  else
+    sprFlipped imgHandle, x - cameraX, y - cameraY, flip
+  end if
+end sub
+
+sub sprRegionWithCamera(imgHandle As Long, srcX%, srcY%, srcW%, srcH%, destX%, destY%)
+  If Not isImageSet(imgHandle) Then Exit Sub
+
+  if UseScreenShake then
+    sprRegion imgHandle, srcX%, srcY%, srcW%, srcH%, destX% - cameraX + shakeX, destY% - cameraY + shakeY
+  else
+    sprRegion imgHandle, srcX%, srcY%, srcW%, srcH%, destX% - cameraX, destY% - cameraY
+  end if
+end sub

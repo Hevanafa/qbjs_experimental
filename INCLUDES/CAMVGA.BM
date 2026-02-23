@@ -1,0 +1,17 @@
+' To be used with CAMERA.BI
+
+sub NPrintWithCamera(text As String, x As Integer, y As Integer, colour As Long)
+  if UseScreenShake then
+    NPrint text, x - cameraX + shakeX, y - cameraY + shakeY, colour
+  else
+    NPrint text, x - cameraX, y - cameraY, colour
+  endif
+end sub
+
+sub PSetWithCamera(x as integer, y as integer, colour as long)
+  if UseScreenShake then
+    NPset x - cameraX + shakeX, y - cameraY + shakeY, colour
+  else
+    NPset x - cameraX, y - cameraY, colour
+  end if
+end sub

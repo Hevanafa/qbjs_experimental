@@ -1,0 +1,386 @@
+' Immediate GUI module
+' Specific to ZGGJ 2
+
+' key: use Prompts enum
+sub PromptBox(text as string, key as integer)
+  dim as integer lineCount
+
+  isPromptShown = qbTrue
+  promptKey = key
+  promptText = text
+
+  ' Syntax not supported in QBJS 0.10.2
+  ' redim as string promptLines(0 to countSubstring(text, qbLf))
+  lineCount = countSubstring(text, qbLf)
+  redim as string promptLines(0 to lineCount)
+  split text, qbLf, promptLines()
+
+  resetAllKeyStates
+end sub
+
+sub MessageBox(text as string, key as integer)
+  dim as integer lineCount
+
+  isMessageBoxShown = qbTrue
+  messageBoxKey = key
+  ' messageBoxText = text
+  promptText = text
+
+  ' Syntax not supported in QBJS 0.10.2
+  ' redim as string promptLines(0 to countSubstring(text, qbLf))
+  lineCount = countSubstring(text, qbLf)
+  redim as string promptLines(0 to lineCount)
+  split text, qbLf, promptLines()
+
+  resetAllKeyStates
+end sub
+
+function allowWidgetInteraction%
+  allowWidgetInteraction = (not isPromptShown) and (not isMessageBoxShown)
+  allowWidgetInteraction = allowWidgetInteraction and (not isStoryShown) and (not isTitleOverlayShown)
+end function
+
+
+sub BlackLabel(text as string, x as integer, y as integer)
+  printBMFont text, x, y, defaultBlackFont, defaultFontGlyphs()
+end sub
+
+sub LabelRightAlign(text as string, x as integer, y as integer)
+  dim w as integer
+  w = measureBMFont(text, defaultFontGlyphs())
+  Label text, x - w, y
+end sub
+
+sub GrapeSodaLabel(text as string, x as integer, y as integer)
+  printBMFont text, x, y, grapeSodaFont, grapeSodaFontGlyphs()
+end sub
+
+sub ScoreLabel(text as string, x as integer, y as integer)
+  printBMFont text, x, y, scoreFont, scoreFontGlyphs()
+end sub
+
+sub ScoreLabelRightAlign(text as string, x as integer, y as integer)
+  dim w as integer
+  w = measureBMFont(text, scoreFontGlyphs())
+  printBMFont text, x - w, y, scoreFont, scoreFontGlyphs()
+end sub
+
+sub LargeLabel(text as string, x as integer, y as integer)
+  printBMFont text, x, y, largeFont, largeFontGlyphs()
+end sub
+
+sub GrapeSodaOutlineLabel(text as string, x as integer, y as integer)
+  printBMFont text, x, y, grapeSodaOutlineFont, grapeSodaOutlineFontGlyphs()
+end sub
+
+
+sub SiteNameSign(text as string, x as integer, y as integer)
+  dim w as integer
+  spr imgSiteNameBG, x, y
+  w = measureBMFont(text, grapeSodaFontGlyphs())
+  GrapeSodaLabel text, x + 47 - w \ 2, y + 12
+end sub
+
+sub HUDIconInfo(icon as long, text as string, x as integer, y as integer)
+  spr imgHUDBox, x, y
+  spr icon, x + 5, y + 3
+  GrapeSodaLabel text, x + 24, y + 3
+end sub
+
+sub DeliveryIconInfo(x as integer, y as integer)
+  spr imgHUDBox, x, y
+  spr imgPackageIcon, x + 5, y + 3
+  printBMFont deliveryCount + " / " + deliveryQuota, x + 24, y + 3, deliveryQuotaFont, grapeSodaFontGlyphs()
+end sub
+
+
+' Copied from ImageButton
+function WitchHutHotspot% (caption as string, x As Integer, y As Integer, imgNormal as long)
+  Dim As TRect zone
+  Dim As Integer thisWidgetID
+
+  zone.x = x
+  zone.y = y
+  zone.width = getImgWidth(imgNormal)
+  zone.height = getImgHeight(imgNormal)
+
+  ' Update logic
+  thisWidgetID = nextWidgetID
+  nextWidgetID = nextWidgetID + 1
+
+  if allowWidgetInteraction then
+    If rectIntersects(zone, mouseZone) Then
+      hotWidget = thisWidgetID
+
+      If mouseJustPressed Then activeWidget = thisWidgetID
+    End If
+
+    If hotWidget = thisWidgetID Then
+      SetTooltip caption, mouseX + 10, mouseY + 10
+    End If
+  end if
+
+  ' Render logic
+  spr imgNormal, x, y
+
+  If mouseJustReleased And (hotWidget = thisWidgetID) And (activeWidget = thisWidgetID) Then
+    ' activeWidget = -1  ' Index reset is handled at the end of NDraw
+    if not clickConsumed then
+      WitchHutHotspot = qbTrue
+      clickConsumed = qbTrue
+    else
+      WitchHutHotspot = qbFalse
+    end if
+  Else
+    WitchHutHotspot = qbFalse
+  End If
+end function
+
+' Copied from Button
+Function TransparentButton% (x As Integer, y As Integer, width As Integer, height As Integer)
+  Dim zone As TRect
+  Dim thisWidgetID As Integer
+
+  zone.x = x
+  zone.y = y
+  zone.width = width
+  zone.height = height
+
+  ' Update logic
+  thisWidgetID = nextWidgetID
+  nextWidgetID = nextWidgetID + 1
+
+  if allowWidgetInteraction then
+    If rectIntersects(zone, mouseZone) Then
+      hotWidget = thisWidgetID
+
+      If mouseJustPressed Then activeWidget = thisWidgetID
+    End If
+  end if
+
+  ' rect zone.x, zone.y, zone.x + zone.width, zone.y + zone.height, IceCreamWhite
+
+  If mouseJustReleased And (hotWidget = thisWidgetID) And (activeWidget = thisWidgetID) Then
+    ' activeWidget = -1  ' Index reset is handled at the end of NDraw
+
+    if not clickConsumed then
+      TransparentButton = qbTrue
+      clickConsumed = qbTrue
+    else
+      TransparentButton = qbFalse
+    end if
+  Else
+    TransparentButton = qbFalse
+  End If
+End Function
+
+' Copied from TransparentButton
+Function StoryClickZone% (x As Integer, y As Integer, width As Integer, height As Integer)
+  Dim zone As TRect
+  Dim thisWidgetID As Integer
+
+  zone.x = x
+  zone.y = y
+  zone.width = width
+  zone.height = height
+
+  ' Update logic
+  thisWidgetID = nextWidgetID
+  nextWidgetID = nextWidgetID + 1
+
+  If rectIntersects(zone, mouseZone) Then
+    hotWidget = thisWidgetID
+
+    If mouseJustPressed Then activeWidget = thisWidgetID
+  End If
+
+  ' rect zone.x, zone.y, zone.x + zone.width, zone.y + zone.height, IceCreamWhite
+
+  If mouseJustReleased And (hotWidget = thisWidgetID) And (activeWidget = thisWidgetID) Then
+    ' activeWidget = -1  ' Index reset is handled at the end of NDraw
+
+    StoryClickZone = qbTrue
+    clickConsumed = qbTrue
+  Else
+    StoryClickZone = qbFalse
+  End If
+End Function
+
+
+' Copied from Button
+Function AddressButton% (caption As String, x As Integer, y As Integer, width As Integer, height As Integer, addressIdx as integer)
+  Dim zone As TRect
+  Dim thisWidgetID As Integer
+  Dim As _Unsigned Long buttonColour, border
+
+  zone.x = x
+  zone.y = y
+  zone.width = width
+  zone.height = height
+
+  ' Update logic
+  thisWidgetID = nextWidgetID
+  nextWidgetID = nextWidgetID + 1
+
+  if allowWidgetInteraction then
+    If rectIntersects(zone, mouseZone) Then
+      hotWidget = thisWidgetID
+      If mouseJustPressed Then activeWidget = thisWidgetID
+    End If
+  end if
+
+  ' Render logic
+  If activeWidget = thisWidgetID Then
+    ' Pressed
+    buttonColour = IceCreamRed
+  ElseIf hotWidget = thisWidgetID Then
+    ' Hovered
+    buttonColour = IceCreamOrange
+  Else
+    buttonColour = IceCreamWhite
+  End If
+
+  if (activeWidget = thisWidgetID) or (hotWidget = thisWidgetID) then
+    Label (addressIdx + 1), x, y - 12
+  end if
+
+  rectfill zone.x, zone.y, zone.x + zone.width, zone.y + zone.height, buttonColour
+  border = Iif(addressIdx = selectedAddressIdx, white, black)
+  rect zone.x, zone.y, zone.x + zone.width, zone.y + zone.height, border
+  BlackLabel caption, zone.x + 4, zone.y + 4
+
+  If mouseJustReleased And (hotWidget = thisWidgetID) And (activeWidget = thisWidgetID) Then
+    ' activeWidget = -1  ' Index reset is handled at the end of NDraw
+    AddressButton = qbTrue
+  Else
+    AddressButton = qbFalse
+  End If
+End Function
+
+Function PromptButton% (text as string, x As Integer, y As Integer)
+  Dim zone As TRect
+  dim w as integer
+  Dim thisWidgetID As Integer
+  Dim buttonImgHandle As Long
+  
+  zone.x = x
+  zone.y = y
+  zone.width = getImgWidth(imgPromptButtonNormal)
+  zone.height = getImgHeight(imgPromptButtonNormal)
+
+  ' Update logic 
+  thisWidgetID = nextWidgetID
+  nextWidgetID = nextWidgetID + 1
+
+  If rectIntersects(zone, mouseZone) Then
+    hotWidget = thisWidgetID
+
+    If mouseJustPressed Then activeWidget = thisWidgetID
+  End If
+
+  ' Render logic
+  If activeWidget = thisWidgetID Then
+    ' pressed
+    buttonImgHandle = imgPromptButtonPressed
+  ElseIf hotWidget = thisWidgetID Then
+    ' hovered
+    buttonImgHandle = imgPromptButtonHovered
+  Else
+    buttonImgHandle = imgPromptButtonNormal
+  End If
+
+  spr buttonImgHandle, x, y
+
+  w = measureBMFont(text, grapeSodaFontGlyphs())
+  x = x + (_width(imgPromptButtonNormal) - w) \ 2
+  y = y + (_height(imgPromptButtonNormal) - grapeSodaFont.lineHeight) \ 2
+  y = Iif(activeWidget = thisWidgetID, y + 1, y)
+  GrapeSodaLabel text, x, y
+
+  If mouseJustReleased And (hotWidget = thisWidgetID) And (activeWidget = thisWidgetID) Then
+    ' activeWidget = -1  ' Index reset is handled at the end of NDraw
+    PromptButton = qbTrue
+    playSound sfxButtonClick
+  Else
+    PromptButton = qbFalse
+  End If
+End Function
+
+
+' Based on PromptButton
+Function MessageBoxButton% (text as string, x As Integer, y As Integer)
+  Dim zone As TRect
+  dim w as integer
+  Dim thisWidgetID As Integer
+  Dim buttonImgHandle As Long
+  
+  zone.x = x
+  zone.y = y
+  zone.width = getImgWidth(imgPromptButtonNormal)
+  zone.height = getImgHeight(imgPromptButtonNormal)
+
+  ' Update logic 
+  thisWidgetID = nextWidgetID
+  nextWidgetID = nextWidgetID + 1
+
+  If rectIntersects(zone, mouseZone) Then
+    hotWidget = thisWidgetID
+
+    If mouseJustPressed Then activeWidget = thisWidgetID
+  End If
+
+  ' Render logic
+  If activeWidget = thisWidgetID Then
+    ' pressed
+    buttonImgHandle = imgPromptButtonPressed
+  ElseIf hotWidget = thisWidgetID Then
+    ' hovered
+    buttonImgHandle = imgPromptButtonHovered
+  Else
+    buttonImgHandle = imgPromptButtonNormal
+  End If
+
+  spr buttonImgHandle, x, y
+
+  w = measureBMFont(text, defaultFontGlyphs())
+  x = x + (_width(imgPromptButtonNormal) - w) \ 2
+  y = y + (_height(imgPromptButtonNormal) - defaultFont.lineHeight) \ 2
+  y = Iif(activeWidget = thisWidgetID, y + 1, y)
+  Label text, x, y
+
+  If mouseJustReleased And (hotWidget = thisWidgetID) And (activeWidget = thisWidgetID) Then
+    ' activeWidget = -1  ' Index reset is handled at the end of NDraw
+    MessageBoxButton = qbTrue
+    playSound sfxButtonClick
+  Else
+    MessageBoxButton = qbFalse
+  End If
+End Function
+
+' Based on TransparentButton
+Function TitleTransparentButton% (x As Integer, y As Integer, width As Integer, height As Integer)
+  Dim zone As TRect
+  Dim thisWidgetID As Integer
+
+  zone.x = x
+  zone.y = y
+  zone.width = width
+  zone.height = height
+
+  ' Update logic
+  thisWidgetID = nextWidgetID
+  nextWidgetID = nextWidgetID + 1
+
+  If rectIntersects(zone, mouseZone) Then
+    hotWidget = thisWidgetID
+
+    If mouseJustPressed Then activeWidget = thisWidgetID
+  End If
+
+  If mouseJustReleased And (hotWidget = thisWidgetID) And (activeWidget = thisWidgetID) Then
+    ' activeWidget = -1  ' Index reset is handled at the end of NDraw
+    TitleTransparentButton = qbTrue
+  Else
+    TitleTransparentButton = qbFalse
+  End If
+End Function

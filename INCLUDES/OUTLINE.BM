@@ -1,0 +1,33 @@
+$IncludeOnce
+
+sub addImageOutline(srcImage as long, outline as _unsigned long, outImage as long)
+  dim lastDest as long
+  dim as integer a, b, w, h
+
+  if not isImageSet(srcImage) then panicHalt "addImageOutline: srcImage is not set!"
+  if not isImageSet(outImage) then panicHalt "addImageOutline: outImage is not set!"
+
+  lastDest = _dest
+  w = getImgWidth(srcImage)
+  h = getImgHeight(srcImage)
+
+  _source srcImage
+  _dest outImage
+
+  for b=0 to h - 1
+    for a=0 to w - 1
+      if _alpha(point(a, b)) > 0 then
+        ' Check if any neighbour is transparent
+        ' If yes, draw the outline
+        if (0 <= b-1) and _alpha(point(a, b-1)) = 0 then pset (a, b-1), outline
+        if (b+1 < h) and _alpha(point(a, b+1)) = 0 then pset (a, b+1), outline
+        if (0 <= a-1) and _alpha(point(a-1, b)) = 0 then pset (a-1, b), outline
+        if (a+1 < w) and _alpha(point(a+1, b)) = 0 then pset (a+1, b), outline
+      end if
+    next a, b
+
+  _putimage , srcImage, outImage
+
+  ' Restore last write page
+  _dest lastDest
+end sub

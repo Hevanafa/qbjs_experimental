@@ -1,0 +1,31 @@
+$IncludeOnce
+
+sub initFPSCounter
+  lastFPSTime = getTimer
+  lastFPS = 0
+  fps = 0
+end sub
+
+Sub incrementFPS
+  Dim realTime as double
+  realTime = getTimer
+  
+  If realTime >= lastFPSTime + 1.0 Then
+    lastFPSTime = realTime
+    lastFPS = fps
+    fps = 1
+  Else
+    fps = fps + 1
+  End If
+End Sub
+
+Sub drawFPS
+  dim s as string
+  dim w as integer
+
+  ' Color &HFFFFFF00
+  s = "FPS:" + Str$(lastFPS)
+  w = measureBMFont(s, defaultFontGlyphs())
+  Label s, vgaWidth - w - 4, 0
+  ' Color &HFFFFFFFF
+End Sub

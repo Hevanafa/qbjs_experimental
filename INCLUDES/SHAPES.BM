@@ -1,0 +1,98 @@
+$IncludeOnce
+
+function rectIntersects% (self as TRect, other as TRect)
+  rectIntersects = (other.x < self.x + self.width) and _
+    (self.x < other.x + other.width) and _
+    (other.y < self.y + self.height) and _
+    (self.y < other.y + other.height)
+end function
+
+' Uses 1 as the threshold
+' returns: boolean
+function rectAtEdge% (self as TRect, bounds as TRect)
+  ' top, right, bottom, left
+  rectAtEdge = (self.y <= bounds.y + 1) or _
+    (self.x + self.width >= bounds.x + bounds.width - 1) or _
+    (self.y + self.height >= bounds.y + bounds.height - 1) or _
+    (self.x <= bounds.x + 1)
+end function
+
+function lineIntersectsRect% (self as TLine, r as TRect)
+  dim as integer rectTop, rectRight, rectBottom, rectLeft
+  
+  rectTop = r.y
+  rectRight = r.x + r.width
+  rectBottom = r.y + r.height
+  rectLeft = r.x
+  
+  ' Check bounds
+  ' Line is completely to the left, right, above, below
+  if (self.y0 < rectTop and self.y1 < rectTop) or _
+    (self.x0 > rectRight and self.x1 > rectRight) or _
+    (self.y0 > rectBottom and self.y1 > rectBottom) or _
+    (self.x0 < rectLeft and self.x1 < rectLeft) then
+
+    lineIntersectsRect% = qbFalse
+    exit function
+  end if
+  
+  ' Check if either endpoint is inside the rectangle
+  ' Start point is inside, end point is inside
+  if (self.x0 >= rectLeft and self.x0 <= rectRight and self.y0 >= rectTop and self.y0 <= rectBottom) or _
+    (self.x1 >= rectLeft and self.x1 <= rectRight and self.y1 >= rectTop and self.y1 <= rectBottom) then
+      lineIntersectsRect% = qbTrue
+      exit function
+  end if
+    
+  ' Check intersection with each edge of the rectangle
+  ' Top, right, bottom, left edges
+  if lineIntersectsLineSegment%(self.x0, self.y0, self.x1, self.y1, rectLeft, rectTop, rectRight, rectTop) or _
+    lineIntersectsLineSegment%(self.x0, self.y0, self.x1, self.y1, rectRight, rectTop, rectRight, rectBottom) or _
+    lineIntersectsLineSegment%(self.x0, self.y0, self.x1, self.y1, rectLeft, rectBottom, rectRight, rectBottom) or _
+    lineIntersectsLineSegment%(self.x0, self.y0, self.x1, self.y1, rectLeft, rectTop, rectLeft, rectBottom) then
+
+    lineIntersectsRect% = qbTrue
+  else
+    lineIntersectsRect% = qbFalse
+  end if
+end function
+
+function lineIntersectsLineSegment%( _
+  x0 as integer, y0 as integer, _
+  x1 as integer, y1 as integer, _
+  x2 as integer, y2 as integer, _
+  x3 as integer, y3 as integer)
+
+  ' Calculate direction vectors
+  dim as double denom, t, u
+
+  denom = (x0 - x1) * (y2 - y3) - (y0 - y1) * (x2 - x3)
+  
+  ' Lines are parallel
+  if abs(denom) < 0.0001 then
+    lineIntersectsLineSegment% = 0
+    exit function
+  end if
+  
+  t = ((x0 - x2) * (y2 - y3) - (y0 - y2) * (x2 - x3)) / denom
+  u = -((x0 - x1) * (y0 - y2) - (y0 - y1) * (x0 - x2)) / denom
+  
+  ' Check if intersection point lies on both line segments
+  if (t >= 0 and t <= 1 and u >= 0 and u <= 1) then
+    lineIntersectsLineSegment% = -1
+  else
+    lineIntersectsLineSegment% = 0
+  end if
+end function
+
+function getZoneCX#(zone as TRect)
+  getZoneCX = zone.x + zone.width \ 2
+end function
+
+function getZoneCY#(zone as TRect)
+  getZoneCY = zone.y + zone.height \ 2
+end function
+
+function getZoneDistance#(zone1 as TRect, zone2 as TRect)
+  getZoneDistance = (getZoneCX(zone2) - getZoneCX(zone1)) ^ 2 + (getZoneCY(zone2) - getZoneCY(zone1)) ^ 2
+end function

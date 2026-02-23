@@ -1,0 +1,134 @@
+$IncludeOnce
+
+' QBJS-specific
+function loadImage&(filename As String)
+  dim result as long
+
+  if not _fileExists(filename) then
+    panicHalt "loadImage: Couldn't find " + quot + filename + quot + "!"
+  end if
+
+  result = _LoadImage(filename)
+
+  if isImageSet(result) then
+$if WEB then
+    console.log "Loaded " + filename + " as handle" + str$(result)
+$else
+    writeLog "Loaded " + filename + " as handle" + str$(result)
+$endif
+
+    loadImage = result
+  else
+    loadImage = 0
+  end if
+End function
+
+Sub freeImage(imgHandle As Long)
+  If Not isImageSet(imgHandle) Then Exit Sub
+  
+  _FreeImage imgHandle
+$if WEB then
+  console.log "Freed image handle" + str$(imgHandle)
+$else
+  writeLog "Freed image handle" + str$(imgHandle)
+$endif
+
+  imgHandle = 0
+End Sub
+
+Sub spr (imgHandle As Long, x As Integer, y As Integer)
+  ' nprint "Handle: " + i32str(imgHandle), x, y, &hFFFFFFFF
+  if PanicOnNil then
+    If Not isImageSet(imgHandle) Then panicHalt "spr: imgHandle is" + str$(imgHandle)
+  else
+    If Not isImageSet(imgHandle) Then Exit Sub
+  end if
+
+  _PutImage (x, y), imgHandle
+End Sub
+
+function getImgWidth%(imgHandle as long)
+  If Not isImageSet(imgHandle) Then
+    getImgWidth = 0
+    exit function
+  end if
+
+  getImgWidth = _width(imgHandle)
+end function
+
+function getImgHeight(imgHandle as long)
+  If Not isImageSet(imgHandle) Then
+    getImgHeight = 0
+    exit function
+  end if
+
+  getImgHeight = _height(imgHandle)
+end function
+
+' flip: use sprFlip prefix defined in BITMAP.BI
+sub sprFlipped(imgHandle as long, x as integer, y as integer, flip as integer)
+  If Not isImageSet(imgHandle) Then Exit Sub
+
+  dim as integer w, h
+  w = getImgWidth(imgHandle)
+  h = getImgHeight(imgHandle)
+  
+  select case flip
+  case sprFlipHorizontal
+    _PutImage (x, y), imgHandle, , (w, 0)-(0, h)
+  
+  case sprFlipVertical
+    _PutImage (x, y), imgHandle, , (0, h)-(w, 0)
+
+  case sprFlipBoth
+    _PutImage (x, y), imgHandle, , (0, h)-(w, 0)
+
+  case else
+    _PutImage (x, y), imgHandle
+  
+  end select
+end sub
+
+Sub sprRegion (imgHandle As Long, srcX%, srcY%, srcW%, srcH%, destX%, destY%)
+  If Not isImageSet(imgHandle) Then Exit Sub
+
+$if WEB then
+  _PutImage (destX%, destY%)-(destX% + srcW%, destY% + srcH%), imgHandle, , (srcX%, srcY%)-(srcX% + srcW%, srcY% + srcH%)
+$else
+  _PutImage (destX%, destY%)-(destX% + srcW%-1, destY% + srcH%-1), imgHandle, , (srcX%, srcY%)-(srcX% + srcW%-1, srcY% + srcH%-1)
+$endif
+End Sub
+
+sub sprRegionStretched (imgHandle As Long, srcX%, srcY%, srcW%, srcH%, destX%, destY%, destW%, destH%)
+  if not isImageSet(imgHandle) then exit sub
+
+$if web then
+  _PutImage (destX%, destY%)-(destX% + destW%, destY% + destH%), imgHandle, , (srcX%, srcY%)-(srcX% + srcW%, srcY% + srcH%)
+$else
+  _PutImage (destX%, destY%)-(destX% + destW% - 1, destY% + destH% - 1), imgHandle, , (srcX%, srcY%)-(srcX% + srcW% - 1, srcY% + srcH% - 1)
+$endif
+end sub
+
+' flip: use sprFlip enum
+sub sprRegionFlipped(imgHandle As Long, srcX%, srcY%, srcW%, srcH%, destX%, destY%, flip%)
+  If Not isImageSet(imgHandle) Then Exit Sub
+
+  select case flip%
+  case sprFlipHorizontal
+    _PutImage (destX%, destY%)-(destX% + srcW%, destY% + srcH%), imgHandle, , (srcX% + srcW%, srcY%)-(srcX%, srcY% + srcH%)
+  case sprFlipVertical
+    _PutImage (destX%, destY%)-(destX% + srcW%, destY% + srcH%), imgHandle, , (srcX%, srcY% + srcH%)-(srcX% + srcW%, srcY%)
+  case sprFlipBoth
+    _PutImage (destX%, destY%)-(destX% + srcW%, destY% + srcH%), imgHandle, , (srcX% + srcW%, srcY% + srcH%)-(srcX%, srcY%)
+  case else
+    _PutImage (destX%, destY%)-(destX% + srcW%, destY% + srcH%), imgHandle, , (srcX%, srcY%)-(srcX% + srcW%, srcY% + srcH%)
+  end select
+end sub
+
+Function isImageSet% (imgHandle As Long)
+$if WEB then
+  isImageSet = -(imgHandle >= 1000)
+$else
+  isImageSet = (imgHandle < -1)
+$endif
+End Function

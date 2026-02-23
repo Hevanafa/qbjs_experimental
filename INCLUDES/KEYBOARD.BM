@@ -1,0 +1,218 @@
+$IncludeOnce
+
+Function isKeyDown% (keycode As Long)
+  isKeyDown = _KeyDown(keycode)
+End Function
+
+function isUpArrowDown%
+  isUpArrowDown = isKeyDown(K_W) or isKeyDown(K_W_UPPER) or isKeyDown(K_UP)
+end function
+
+function isDownArrowDown%
+  isDownArrowDown = isKeyDown(K_S) or isKeyDown(K_S_UPPER) or isKeyDown(K_DOWN)
+end function
+
+function isLeftArrowDown%
+  isLeftArrowDown = isKeyDown(K_A) or isKeyDown(K_A_UPPER) or isKeyDown(K_LEFT)
+end function
+
+function isRightArrowDown%
+  isRightArrowDown = isKeyDown(K_D) or isKeyDown(K_D_UPPER) or isKeyDown(K_RIGHT)
+end function
+
+function isEKeyDown%
+  isEKeyDown = isKeyDown(K_E) or isKeyDown(K_E_UPPER)
+end function
+
+sub resetAllKeyStates
+  lastEsc = qbFalse
+  lastF2 = qbFalse
+  lastF11 = qbFalse
+  lastE = qbFalse
+  lastF = qbFalse
+
+  lastUp = qbFalse
+  lastRight = qbFalse
+  lastDown = qbFalse
+  lastLeft = qbFalse
+  lastBackspace = qbFalse
+
+  lastEnter = qbFalse
+
+  lastD1 = qbFalse
+  lastD2 = qbFalse
+  lastD3 = qbFalse
+end sub
+
+
+sub handleKeyboardInputs
+  dim as integer a, idx, keycode
+  dim as string k
+  dim as integer nearestSite
+  dim as integer quota
+
+  if not RELEASE then
+    if actualGameState <> GameStatePackageSorter then
+      If lastEsc <> isKeyDown(K_ESC) Then
+        lastEsc = isKeyDown(K_ESC)
+
+        if lastEsc then done = qbTrue
+      end if
+    end if
+  End If
+
+  if lastF <> isKeyDown(K_F) then
+    lastF = isKeyDown(K_F)
+
+    if isKeyDown(K_LCTRL) then
+      if lastF then showFPS = not showFPS
+    end if
+  end if
+
+  if actualGameState = GameStatePackageSorter then
+    if lastEsc <> isKeyDown(K_ESC) then
+      lastEsc = isKeyDown(K_ESC)
+
+      if lastEsc then
+        if not isSorterEndGame then
+          isGamePaused = not isGamePaused
+        end if
+      end if
+    end if
+
+    if lastBackspace <> isKeyDown(K_BACKSPACE) then
+      lastBackspace = isKeyDown(K_BACKSPACE)
+
+      if lastBackspace then
+        ' shiftSorterLine
+
+        ' if getRemainingLineSize <= 10 then
+        '   for a=10 to ubound(sorterLine)
+        '     sorterLine(a) = i32random(1, 3)
+        '   next
+        ' end if
+      end if
+    end if
+
+    if isSorterEndGame and isKeyDown(K_SPACEBAR) then
+      ' startWorldMapMode
+      startWitchHutMode
+    end if
+
+    if lastD1 <> isKeyDown(K_D1) then
+      lastD1 = isKeyDown(K_D1)
+      if lastD1 then sorterThrow PackageToxic
+    end if
+
+    if lastD2 <> isKeyDown(K_D2) then
+      lastD2 = isKeyDown(K_D2)
+      if lastD2 then sorterThrow PackagePerishable
+    end if
+
+    if lastD3 <> isKeyDown(K_D3) then
+      lastD3 = isKeyDown(K_D3)
+      if lastD3 then sorterThrow PackageNonPerishable
+    end if
+
+    if lastLeft <> isLeftArrowDown then
+      lastLeft = isLeftArrowDown
+
+      if lastLeft then sorterThrow PackageToxic
+    end if
+    
+    if lastDown <> isDownArrowDown then
+      lastDown = isDownArrowDown
+      if lastDown then sorterThrow PackagePerishable
+    end if
+    
+    if lastRight <> isRightArrowDown then
+      lastRight = isRightArrowDown
+      if lastRight then sorterThrow PackageNonPerishable
+    end if
+
+    exit sub
+  end if
+
+
+  if actualGameState = GameStateDelivery then
+    ' if lastEnter <> isKeyDown(K_ENTER) then
+    '   ' Add a random address
+    '   lastEnter = isKeyDown(K_ENTER)
+
+    '   if not Release then
+    '     if lastEnter then addRandomAddress
+    '   end if
+    ' end if
+
+    if isPromptShown or isMessageBoxShown then exit sub
+    if isDeliveryComplete then exit sub
+
+    if lastBackspace <> isKeyDown(K_BACKSPACE) then
+      ' Drop an item
+      lastBackspace = isKeyDown(K_BACKSPACE)
+
+      if not Release then
+        if lastBackspace then
+          if removeAddressAt(selectedAddressIdx) <> "" then
+            selectedAddressIdx = -1
+          end if
+        end if
+      end if
+    end if
+
+    if lastE <> isEKeyDown then
+      lastE = isEKeyDown
+
+      if lastE then
+        if not isStoryShown then
+          nearestSite = getNearestSite
+
+          if nearestSite > -1 then
+            ' Add a random address
+            if worldSites(nearestSite).siteType = SiteTypeWitchHut then
+              quota = Iif(allowSpecialDeliveries, deliveryQuota + 1, deliveryQuota)
+
+              if deliveryCount + addressCount + 1 <= quota then
+                if not addRandomAddress then
+                  triggerEvent EventDeliveryOverload
+                else
+                  playSound sfxLoadPackage
+                end if
+              end if
+            else
+              tryDeliverPackage
+            end if
+          end if
+        end if
+      end if
+    end if
+
+    ' Select package to deliver
+    k = inkey$
+    if k <> "" then
+      keycode = asc(left$(k, 1))
+      if (asc("1") <= keycode) and (keycode <= asc("9")) then
+        idx = keycode - asc("1")
+
+        if (0 <= idx) and (idx < addressCount) then
+          if idx = selectedAddressIdx then
+            selectedAddressIdx = -1
+          else
+            selectedAddressIdx = keycode - asc("1")
+          end if
+        end if
+      end if
+    end if
+
+    if (not isUpArrowDown) and (not isDownArrowDown) then playerZone.vy = 0.0
+
+    if isUpArrowDown then playerZone.vy = -100.0
+    if isDownArrowDown then playerZone.vy = 100.0
+
+    if (not isLeftArrowDown) and (not isRightArrowDown) then playerZone.vx = 0.0
+
+    if isLeftArrowDown then playerZone.vx = -100.0
+    if isRightArrowDown then playerZone.vx = 100.0
+  end if
+
+end sub

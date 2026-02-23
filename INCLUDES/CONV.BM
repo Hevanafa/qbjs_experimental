@@ -1,0 +1,47 @@
+$IncludeOnce
+
+function i16str$ (value as integer)
+  i16str$ = LTrim$(Str$(value))
+end function
+
+Function i32str$ (value As long)
+  i32str$ = LTrim$(Str$(value))
+End Function
+
+Function f32str$ (value As Double)
+  ' f32str$ = LTrim$(Str$(value))
+  f32str$ = LTrim$(Str$(CLng(value * 10000) / 10000))
+End Function
+
+Function u16Hex$ (value As Integer)
+  u16Hex$ = Hex$(value)
+End Function
+
+Function boolStr$ (value As Integer)
+  If value = qbFalse Then
+    boolStr$ = "False"
+  Else
+    boolStr$ = "True"
+  End If
+End Function
+
+' Exclusively QBJS
+function boolI16%(value)
+  if value then
+    value = -1
+  else
+    value = 0
+  end if
+end function
+
+Function parseInt% (text As String)
+  parseInt% = Val(text)
+End Function
+
+function moneyFormat$ (value as long)
+  dim result as string
+$if javascript then
+  result = value.toLocaleString("en-AU")
+$endif
+  moneyFormat$ = result
+end function

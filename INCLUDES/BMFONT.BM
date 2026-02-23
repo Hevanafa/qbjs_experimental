@@ -1,0 +1,172 @@
+$IncludeOnce
+
+sub loadBMFont(font as TBMFont, fontGlyphs() as TBMFontGlyph, filename as string)
+  if not _fileexists(filename) then
+    panicHalt "loadBMFont: Couldn't open file" + quot + filename + quot + "!"
+  end if
+
+  dim as string  txtLine
+  dim as integer a
+  dim as string  pairs(0 to 9)
+  dim as string  pair(0 to 1)
+  dim as string  k, v
+  dim as integer glyphCount
+
+  open filename for input as #1
+
+  do while not EOF(1)
+    line input #1, txtLine
+    
+    if startsWith(txtLine, "info") then
+      split txtLine, " ", pairs()
+
+      for a=0 to ubound(pairs)
+        print i32str(a) + ": " + pairs(a)
+
+        split pairs(a), "=", pair()
+        k = pair(0): v = pair(1)
+        if k = "face" then _
+          font.face = replaceAll(v, chr$(34), "")
+      next
+
+    elseif startsWith(txtLine, "common") then
+      split txtLine, " ", pairs()
+
+      for a=0 to ubound(pairs)
+        print i32str(a) + ": " + pairs(a)
+
+        split pairs(a), "=", pair()
+        k = pair(0): v = pair(1)
+        if k = "lineHeight" then _
+          font.lineHeight = parseInt(v)
+      next
+
+    elseif startsWith(txtLine, "page") then
+      split txtLine, " ", pairs()
+
+      for a=0 to ubound(pairs)
+        ' print i32str(a) + ": " + pairs(a)
+
+        split pairs(a), "=", pair()
+        k = pair(0): v = pair(1)
+        if k = "file" then _
+          font.filename = replaceAll(v, chr$(34), "")
+      next
+
+      ' print txtLine
+    elseif startsWith(txtLine, "char") and not startsWith(txtLine, "chars") then
+      dim as TBMFontGlyph tempGlyph
+
+      do while contains(txtLine, "  ")
+        txtLine = replaceAll(txtLine, "  ", " ")
+      loop
+      ' print txtLine
+
+      ' Parse the whole line first, then copy the record/UDT to the list of font glyphs
+      split txtLine, " ", pairs()
+
+      for a=0 to ubound(pairs)
+        ' print i32str(a) + ": " + pairs(a)
+
+        split pairs(a), "=", pair()
+        k = pair(0): v = pair(1)
+        if k = "id" then
+          tempGlyph.id = parseInt(v)
+        elseif k = "x" then
+          tempGlyph.x = parseInt(v)
+        elseif k = "y" then
+          tempGlyph.y = parseInt(v)
+        elseif k = "width" then
+          tempGlyph.width = parseInt(v)
+        elseif k = "height" then
+          tempGlyph.height = parseInt(v)
+        elseif k = "xoffset" then
+          tempGlyph.xoffset = parseInt(v)
+        elseif k = "yoffset" then
+          tempGlyph.yoffset = parseInt(v)
+        elseif k = "xadvance" then
+          tempGlyph.xadvance = parseInt(v)
+        end if
+      next
+
+      if lbound(fontGlyphs) <= tempGlyph.id and tempGlyph.id <= ubound(fontGlyphs) then
+        fontGlyphs(tempGlyph.id) = tempGlyph
+        glyphCount=glyphCount + 1
+      end if
+    end if
+  loop
+
+  console.log "Loaded " + i32str(glyphCount) + " glyphs"
+
+  close #1
+
+  if isImageSet(font.imgHandle) then freeImage font.imgHandle
+
+$if WEB then
+  font.imgHandle = loadImage(trim(font.filename))
+$else
+  loadImage font.imgHandle, trim(font.filename)
+$endif
+end sub
+
+sub cloneBMFont(sourceRef as TBMFont, targetRef as TBMFont)
+$if web then
+  clone sourceRef, targetRef
+$else
+  targetRef = sourceRef
+$endif
+
+  targetRef.imgHandle = _CopyImage(sourceRef.imgHandle)
+end sub
+
+
+sub freeBMFont(font as TBMFont, fontGlyphs() as TBMFontGlyph)
+  dim a as integer
+  dim tempFont as TBMFont
+  dim temp as TBMFontGlyph
+
+  freeImage font.imgHandle
+  font = tempFont
+  for a=lbound(fontGlyphs) to ubound(fontGlyphs)
+    fontGlyphs(a) = temp
+  next
+end sub
+
+sub printBMFont(text as string, x as integer, y as integer, font as TBMFont, fontGlyphs() as TBMFontGlyph)
+  if not isImageSet(font.imgHandle) then exit sub
+
+  dim as string ch
+  dim as integer a, charcode, left
+
+  for a=1 to len(text)
+    ch = mid$(text, a, 1)
+    charcode = asc(ch)
+    ' console.log "charcode: " + i32str(charcode)
+
+    if charcode < lbound(fontGlyphs) or charcode > ubound(fontGlyphs) then
+
+    else
+      sprRegion font.imgHandle, fontGlyphs(charcode).x, fontGlyphs(charcode).y, fontGlyphs(charcode).width, fontGlyphs(charcode).height, x + left + fontGlyphs(charcode).xoffset, y + fontGlyphs(charcode).yoffset
+      left = left + fontGlyphs(charcode).xadvance
+    end if
+  next
+end sub
+
+' Used to have `font as TBMFont`
+function measureBMFont%(text as string, fontGlyphs() as TBMFontGlyph)
+  dim as integer a, result, charcode
+  dim as string ch
+  result = 0
+
+  for a=1 to len(text)
+    ch = mid$(text, a, 1)
+    charcode = asc(ch)
+    
+    if charcode < lbound(fontGlyphs) or charcode > ubound(fontGlyphs) then
+    else
+      result = result + fontGlyphs(charcode).xadvance
+    end if
+  next
+
+  measureBMFont% = result
+end function

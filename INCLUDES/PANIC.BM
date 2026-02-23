@@ -1,0 +1,14 @@
+$IncludeOnce
+
+sub panicHalt(msg as string)
+  screen 0
+  print msg
+
+$if WEB then
+  end
+$else
+  _logerror msg
+  end 1
+$endif
+
+end sub

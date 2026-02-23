@@ -1,0 +1,9 @@
+$IncludeOnce
+
+sub setCameraCX(cx as integer)
+  cameraX = cx - vgaWidth \ 2
+end sub
+
+sub setCameraCY(cy as integer)
+  cameraY = cy - vgaHeight \ 2
+end sub

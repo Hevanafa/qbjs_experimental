@@ -1,0 +1,26 @@
+$IncludeOnce
+
+Sub updateMouse
+  ' Update mouse variables
+  While _MouseInput
+    mouseX = _MouseX \ vgaScale
+    mouseY = _MouseY \ vgaScale
+
+    ' The signs have to be flipped due to how True is encoded as -1
+    mouseButton = _ShL(-_MouseButton(2), 1) + -_MouseButton(1)
+  Wend
+End Sub
+
+Sub initMouse
+  mouseX = 0
+  mouseY = 0
+  mouseButton = MouseButtonNone
+End Sub
+
+Sub showMouse
+  _MouseShow
+End Sub
+
+Sub hideMouse
+  _MouseHide
+End Sub

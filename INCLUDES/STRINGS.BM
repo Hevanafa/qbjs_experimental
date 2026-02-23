@@ -1,0 +1,171 @@
+$IncludeOnce
+
+function startsWith%(text as string, searchStr as string)
+  startsWith% = (left$(text, len(searchStr)) = searchStr)
+end function
+
+function i16join$(ary() as integer, separator$)
+  dim a as integer
+  dim result as string
+
+  if (ubound(ary) + 1) > 1 then
+    for a=0 to ubound(ary) - 1
+      result = result + i32str(ary(a)) + separator$
+    next
+  end if
+
+  result = result + i32str(ary(ubound(ary)))
+  i16join = result
+end function
+
+function join$ (ary() as string, separator$)
+  dim result as string
+  dim a as integer
+
+$if web then
+$if javascript then
+  const [lbound, ubound] = [ary._dimensions[0].l, ary._dimensions[0].u]
+  const resultAry = []
+  // console.log("ary", ary)
+
+  for (a=lbound; a<=ubound; a++)
+    if (ary[a] != null)
+      resultAry.push(ary[a].value);
+
+  result = resultAry.join(separator)
+$endif
+$else
+
+  if (ubound(ary) + 1) > 1 then
+    for a=0 to ubound(ary) - 1
+      result = result + ary(a) + separator$
+    next
+  end if
+
+  result = result + ary(ubound(ary))
+$endif
+
+  join$ = result
+end function
+
+sub split(text as string, delimiter as string, outputAry() as string)
+  dim as integer i, startPos, delimPos
+  dim as string token
+
+  for i = 0 to ubound(outputAry)
+    outputAry(i) = ""
+  next
+
+  startPos = 1
+  i = 0
+
+  do while startPos <= len(text) and i <= ubound(outputAry)
+    delimPos = instr(startPos, text, delimiter)
+
+    if delimPos = 0 then
+      token = mid$(text, startPos)
+    else
+      token = mid$(text, startPos, delimPos  - startPos)
+    end if
+
+    outputAry(i) = token
+    i = i + 1
+
+    if delimPos = 0 then exit do
+    startPos = delimPos + len(delimiter)
+  loop
+end sub
+
+function countSubstring% (source as string, searchStr as string)
+  dim as integer result, pos, startPos
+  result = 0
+  startPos = 12
+
+  do
+    pos = instr(startPos, source, searchStr)
+    if pos = 0 then exit do
+    result = result + 1
+    startPos = pos + len(searchStr)
+  loop
+
+  countSubstring = result
+end function
+
+function contains% (source as string, searchStr as string)
+  contains% = instr(source, searchStr) <> 0
+end function
+
+
+function replaceAll$(source as string, searchStr as string, replaceStr as string)
+  dim result as string
+  dim as integer foundPos, lastPos
+
+  if len(searchStr) = 0 then
+    replaceAll$ = source
+    exit function
+  end if
+
+  result = ""
+  lastPos = 1
+
+  do
+    foundPos = instr(lastPos, source, searchStr)
+
+    if foundPos = 0 then
+      result = result + mid$(source, lastPos)
+      exit do
+    else
+      result = result + mid$(source, lastPos, foundPos - lastPos)
+      result = result + replaceStr
+      lastPos = foundPos + len(searchStr)
+    end if
+  loop
+
+  replaceAll$ = result
+end function
+
+
+function trimStart$(source$)
+  trimStart$ = ltrim$(source$)
+end function
+
+function trimEnd$(source$)
+  trimEnd$ = rtrim$(source$)
+end function
+
+function trim$(source$)
+  trim$ = trimStart$(trimEnd$(source$))
+end function
+
+function padStart$(text as string, targetLength as integer, padString as string)
+  dim result as string
+  result = text
+
+  if len(result) >= targetLength then
+    padStart = result
+    exit function
+  end if
+
+  do while len(result) < targetLength
+    result = padString + result
+  loop
+
+  padStart = result
+end function
+
+function reverse$(text as string)
+  dim result as string
+
+$if web then
+$if javascript then
+  result = [...text].reverse().join("")
+$endif
+$else
+  dim a as integer
+  for a = len(text) to 1 step - 1
+    result=result + mid$(text, a, 1)
+  next
+$endif
+
+  reverse$ = result
+end function

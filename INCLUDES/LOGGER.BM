@@ -1,0 +1,20 @@
+$IncludeOnce
+
+sub initLogger
+$if WEB then
+$else
+  open "LOG.TXT" for output as #99
+$end if
+end sub
+
+sub writeLog(msg as string)
+$if WEB then
+  console.log msg
+$else
+  print #99, msg
+$endif
+end sub
+
+sub closeLogger
+  close #99
+end sub

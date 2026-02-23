@@ -1,0 +1,52 @@
+' Perform clone UDT
+' QBJS Exclusive
+sub clone(sourceRef, targetRef)
+$if javascript then
+  for (const k in sourceRef) targetRef[k] = sourceRef[k];
+$endif
+end sub
+
+' Ternary operator
+function Iif (condition, ifTrue, ifFalse)
+$if web then
+$if javascript then
+  return condition ? ifTrue : ifFalse
+$endif
+$else
+  Iif = _Iif(condition, ifTrue, ifFalse)
+$endif
+end function
+
+' QBJS Exclusive
+function qbBool% (value)
+  dim as integer result
+$if web then
+$if javascript then
+  result = value ? -1 : 0;
+$endif
+  qbBool = result
+
+$else
+  qbBool = value <> 0
+$endif
+end function
+
+' QBJS Exclusive
+sub hideLoadingScreen
+$if javascript then
+  const loadingScreen = document.getElementById("loading-screen")
+  if (loadingScreen != null)
+    loadingScreen.style.display = "none";
+$endif
+end sub
+
+' QBJS Exclusive
+sub setLoadingScreenText(text as string)
+$if javascript then
+  const loadingScreen = document.getElementById("loading-screen")
+  if (loadingScreen != null) {
+    const child = loadingScreen.children[0]
+    child.innerHTML = text
+  }
+$endif
+end sub

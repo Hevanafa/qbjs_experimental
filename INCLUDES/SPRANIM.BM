@@ -1,0 +1,83 @@
+$IncludeOnce
+
+sub initSpriteAnim(sprite as TSpriteAnim, imgHandle as long, frameCount as integer, frameWidth as integer, frameHeight as integer, interval as double)
+  sprite.imgHandle = imgHandle
+
+  sprite.frameCount = frameCount
+  sprite.frameWidth = frameWidth
+  sprite.frameHeight = frameHeight
+  rewindSpriteAnimGame sprite
+  
+  sprite.interval = interval
+  sprite.flip = SprFlipNone
+
+  sprite.isLooping = qbTrue
+end sub
+
+function isSpriteAnimSet(sprite as TSpriteAnim)
+  isSpriteAnimSet = isImageSet(sprite.imgHandle)
+end function
+
+sub updateSpriteAnimGame(sprite as TSpriteAnim)
+  if not isSpriteAnimSet(sprite) then exit sub
+  if gameTime >= sprite.frameEndTick then stepSpriteAnimFrame sprite
+end sub
+
+sub updateSpriteAnimReal(sprite as TSpriteAnim)
+  if not isSpriteAnimSet(sprite) then exit sub
+  if getTimer >= sprite.frameEndTick then stepSpriteAnimFrame sprite
+end sub
+
+sub stepSpriteAnimFrame(sprite as TSpriteAnim)
+  if sprite.frameIdx < sprite.frameCount then
+    sprite.frameIdx = sprite.frameIdx + 1
+    sprite.frameEndTick = sprite.frameEndTick + sprite.interval
+  end if
+
+  if (sprite.frameIdx >= sprite.frameCount) then
+    if sprite.isLooping then
+      sprite.frameIdx = 0
+    end if
+  end if
+end sub
+
+' Used together with isLooping = qbFalse
+sub rewindSpriteAnimGame(sprite as TSpriteAnim)
+  sprite.frameIdx = 0
+  sprite.frameEndTick = gameTime + sprite.interval
+end sub
+
+sub rewindSpriteAnimReal(sprite as TSpriteAnim)
+  sprite.frameIdx = 0
+  sprite.frameEndTick = getTimer + sprite.interval
+end sub
+
+sub drawSpriteAnim(sprite as TSpriteAnim, x as integer, y as integer)
+  if not isSpriteAnimSet(sprite) then exit sub
+  if sprite.frameIdx >= sprite.frameCount then exit sub
+
+  ' sprRegion sprite.imgHandle, _
+  '   sprite.frameIdx * sprite.frameWidth, 0, _
+  '   sprite.frameWidth, sprite.frameHeight, x, y
+  sprRegionFlipped sprite.imgHandle, _
+    sprite.frameIdx * sprite.frameWidth, 0, _
+    sprite.frameWidth, sprite.frameHeight, x, y, sprite.flip
+end sub
+
+function isSpriteAnimComplete%(sprite as TSpriteAnim)
+  if sprite.isLooping then
+    isSpriteAnimComplete = qbFalse
+    exit function
+  end if
+
+  isSpriteAnimComplete = (sprite.frameIdx >= sprite.frameCount)
+end function
+
+
+sub drawSpriteAnimWithCamera(sprite as TSpriteAnim, x as integer, y as integer)
+  if UseScreenShake then
+    drawSpriteAnim sprite, x - cameraX + shakeX, y - cameraY + shakeY
+  else
+    drawSpriteAnim sprite, x - cameraX, y - cameraY
+  end if
+end sub
