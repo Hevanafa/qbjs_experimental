@@ -54,6 +54,7 @@ dim shared lastEsc
 
 dim shared done  ' boolean
 dim shared as integer actualGameState
+dim shared as double gameTime
 
 
 
@@ -143,12 +144,6 @@ sub init
 end sub
 
 
-sub beginPlayingState
-  actualGameState = GameStatePlaying
-
-  ' Init game state
-end sub
-
 sub beginLoadingState
   actualGameState = GameStateLoading
   
@@ -175,6 +170,13 @@ $if javascript
     // sub_beginPlayingState();
   })
 $endif
+end sub
+
+sub beginPlayingState
+  actualGameState = GameStatePlaying
+
+  ' Init game state
+  gameTime = 0.0
 end sub
 
 
