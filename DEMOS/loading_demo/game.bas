@@ -115,6 +115,12 @@ sub printDefault(text as string, x as integer, y as integer)
   printBMFont defaultFont, defaultFontGlyphs(), text, x, y
 end sub
 
+sub printDefaultCentred(text as string, cx as integer, y as integer)
+  dim as integer w
+  w = measureBMFont(defaultFontGlyphs(), text)
+  printBMFont defaultFont, defaultFontGlyphs(), text, cx - w \ 2, y
+end sub
+
 
 sub init
   initLogger
@@ -199,7 +205,7 @@ sub ExDraw
   if actualGameState = GameStateLoading then
     cls , Black
 
-    printDefault "Progress: " + assetCount + " / " + totalAssetCount, 10, 10
+    printDefaultCentred "Progress: " + assetCount + " / " + totalAssetCount, vgaWidth \ 2, 90
 
     flush
     exit sub
@@ -209,7 +215,7 @@ sub ExDraw
 
   ' spr defaultFont.imgHandle, 10, 10
 
-  printBMFont defaultFont, defaultFontGlyphs(), "Hello world!", 10, 10
+  printDefaultCentred "Hello world!", vgaWidth \ 2, 100
 
   drawMouse
   drawFPS
