@@ -44,6 +44,10 @@ dim shared as TBMFontGlyph defaultFontGlyphs(32 to 126)
 
 dim shared as long imgCursor, imgEmptyHeart, imgFilledHeart, imgHorseshoe
 
+const totalAssetCount = 4
+dim shared as integer assetCount
+assetCount = 0
+
 ' Game state variables
 dim shared lastEsc
 
@@ -106,6 +110,11 @@ sub loadDefaultFont
   loadBMFont defaultFont, defaultFontGlyphs(), "assets\fonts\tahoma_bold_10.txt"
 end sub
 
+sub printDefault(text as string, x as integer, y as integer)
+  printBMFont defaultFont, defaultFontGlyphs(), text, x, y
+end sub
+
+
 sub init
   initLogger
   initDeltaTime
@@ -122,15 +131,22 @@ sub init
 
   ' Load assets
   loadDefaultFont
+
+  beginLoadingState
 end sub
 
 sub beginLoadingState
   actualGameState = GameStateLoading
   
   ' imgCursor = _LoadImage("assets\images\cursor.png")
+
 $if javascript
-  imgCursor = await QB.func__LoadImage("assets\\images\\cursor.png");
-  console.log("imgCursor is", imgCursor);
+  imgCursor = QB.func__LoadImage("assets\\images\\cursor.png");
+  imgEmptyHeart = QB.func__LoadImage("assets\\images\\empty_heart.png");
+  imgFilledHeart = QB.func__LoadImage("assets\\images\\filled_heart.png");
+  imgHorseshoe = QB.func__LoadImage("assets\\images\\horseshoe.png");
+
+  console.log("imgCursor", imgCursor)
 $endif
 
 end sub
@@ -158,6 +174,13 @@ sub ExUpdate
 end sub
 
 sub ExDraw
+  if actualGameState = GameStateLoading then
+    printDefault "Progress: " + assetCount + " / " + totalAssetCount, 10, 10
+
+    flush
+    exit sub
+  end if
+
   cls , CornflowerBlue
 
   ' spr defaultFont.imgHandle, 10, 10
