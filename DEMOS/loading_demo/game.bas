@@ -150,12 +150,22 @@ sub beginLoadingState
   ExDraw
 
 $if javascript
+  function imageLoader(path, callback) {
+    return QB.func__LoadImage(path).then(imgHandle => {
+      assetCount++;
+      sub_ExDraw();
+      
+      callback?.(imgHandle)
+    })
+  }
+
   Promise.all([
-    QB.func__LoadImage("assets\\images\\cursor.png").then(r => { imgCursor = r; assetCount++; sub_ExDraw() }),
-    QB.func__LoadImage("assets\\images\\empty_heart.png").then(r => { imgEmptyHeart = r; assetCount++; sub_ExDraw() }),
-    QB.func__LoadImage("assets\\images\\filled_heart.png").then(r => { imgFilledHeart = r; assetCount++; sub_ExDraw() }),
-    QB.func__LoadImage("assets\\images\\horseshoe.png").then(r => { imgHorseshoe = r; assetCount++; sub_ExDraw() })
+    imageLoader("assets\\images\\cursor.png", h => { imgCursor = h }),
+    imageLoader("assets\\images\\empty_heart.png", h => { imgEmptyHeart = h }),
+    imageLoader("assets\\images\\filled_heart.png", h => { imgFilledHeart = h }),
+    imageLoader("assets\\images\\horseshoe.png", h => { imgHorseshoe = h })
   ]).then(() => {
+    console.log("imgCursor is", imgCursor);
     // sub_beginPlayingState();
   })
 $endif
