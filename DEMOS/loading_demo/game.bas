@@ -147,18 +147,17 @@ sub beginLoadingState
   actualGameState = GameStateLoading
   
   ' imgCursor = _LoadImage("assets\images\cursor.png")
+  ExDraw
 
 $if javascript
   Promise.all([
-    QB.func__LoadImage("assets\\images\\cursor.png").then(r => { imgCursor = r; assetCount++ }),
-    QB.func__LoadImage("assets\\images\\empty_heart.png").then(r => { imgEmptyHeart = r; assetCount++ }),
-    QB.func__LoadImage("assets\\images\\filled_heart.png").then(r => { imgFilledHeart = r; assetCount++ }),
-    QB.func__LoadImage("assets\\images\\horseshoe_heart.png").then(r => { imgHorseshoe = r; assetCount++ })
+    QB.func__LoadImage("assets\\images\\cursor.png").then(r => { imgCursor = r; assetCount++; sub_ExDraw() }),
+    QB.func__LoadImage("assets\\images\\empty_heart.png").then(r => { imgEmptyHeart = r; assetCount++; sub_ExDraw() }),
+    QB.func__LoadImage("assets\\images\\filled_heart.png").then(r => { imgFilledHeart = r; assetCount++; sub_ExDraw() }),
+    QB.func__LoadImage("assets\\images\\horseshoe.png").then(r => { imgHorseshoe = r; assetCount++; sub_ExDraw() })
   ]).then(() => {
-    sub_beginPlayingState();
+    // sub_beginPlayingState();
   })
-
-  console.log("imgCursor", imgCursor)
 $endif
 end sub
 
@@ -169,7 +168,11 @@ sub ExUpdate
 
   updateMouse
 
-  if actualGameState = GameStateLoading then exit sub
+  if actualGameState = GameStateLoading then
+    ' if assetCount = totalAssetCount then beginPlayingState
+    
+    exit sub
+  end if
 
   ' Default state: Playing
 
