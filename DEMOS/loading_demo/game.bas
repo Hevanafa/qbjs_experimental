@@ -179,7 +179,7 @@ sub ExUpdate
   updateMouse
 
   if actualGameState = GameStateLoading then
-    ' if assetCount = totalAssetCount then beginPlayingState
+    if assetCount = totalAssetCount then beginPlayingState
     
     exit sub
   end if
