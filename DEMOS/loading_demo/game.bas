@@ -33,6 +33,7 @@ const TargetFPS = 60
 const K_ESC = 27
 
 const CornflowerBlue = &hFF6495ED
+const Black = &hFF000000
 
 const GameStateLoading = 1
 const GameStatePlaying = 2
@@ -135,26 +136,30 @@ sub init
   beginLoadingState
 end sub
 
+
+sub beginPlayingState
+  actualGameState = GameStatePlaying
+
+  ' Init game state
+end sub
+
 sub beginLoadingState
   actualGameState = GameStateLoading
   
   ' imgCursor = _LoadImage("assets\images\cursor.png")
 
 $if javascript
-  imgCursor = QB.func__LoadImage("assets\\images\\cursor.png");
-  imgEmptyHeart = QB.func__LoadImage("assets\\images\\empty_heart.png");
-  imgFilledHeart = QB.func__LoadImage("assets\\images\\filled_heart.png");
-  imgHorseshoe = QB.func__LoadImage("assets\\images\\horseshoe.png");
+  Promise.all([
+    QB.func__LoadImage("assets\\images\\cursor.png").then(r => { imgCursor = r; assetCount++ }),
+    QB.func__LoadImage("assets\\images\\empty_heart.png").then(r => { imgEmptyHeart = r; assetCount++ }),
+    QB.func__LoadImage("assets\\images\\filled_heart.png").then(r => { imgFilledHeart = r; assetCount++ }),
+    QB.func__LoadImage("assets\\images\\horseshoe_heart.png").then(r => { imgHorseshoe = r; assetCount++ })
+  ]).then(() => {
+    sub_beginPlayingState();
+  })
 
   console.log("imgCursor", imgCursor)
 $endif
-
-end sub
-
-sub beginPlayingState
-  actualGameState = GameStatePlaying
-
-  ' Init game state
 end sub
 
 
@@ -163,6 +168,10 @@ sub ExUpdate
   incrementFPS
 
   updateMouse
+
+  if actualGameState = GameStateLoading then exit sub
+
+  ' Default state: Playing
 
   If lastEsc <> isKeyDown(K_ESC) Then
     lastEsc = isKeyDown(K_ESC)
@@ -175,6 +184,8 @@ end sub
 
 sub ExDraw
   if actualGameState = GameStateLoading then
+    cls , Black
+
     printDefault "Progress: " + assetCount + " / " + totalAssetCount, 10, 10
 
     flush
