@@ -34,21 +34,30 @@ const K_ESC = 27
 
 const CornflowerBlue = &hFF6495ED
 
-dim shared done
+const GameStateLoading = 1
+const GameStatePlaying = 2
 
 ' Asset variables
 
 dim shared as TBMFont defaultFont
 dim shared as TBMFontGlyph defaultFontGlyphs(32 to 126)
 
-dim shared as long imgCursor
+dim shared as long imgCursor, imgEmptyHeart, imgFilledHeart, imgHorseshoe
 
 ' Game state variables
 dim shared lastEsc
 
+dim shared done  ' boolean
+dim shared as integer actualGameState
+
+
 
 ' Entry point
 init
+
+$if javascript
+console.log("imgCursor (outside)", imgCursor);
+$endif
 
 do while not done
   _limit TargetFPS
@@ -109,13 +118,27 @@ sub init
   initMouse
   hideMouse
 
+  done = qbFalse
+
   ' Load assets
   loadDefaultFont
+end sub
 
-  imgCursor = loadImage("assets\images\cursor.png")
+sub beginLoadingState
+  actualGameState = GameStateLoading
+  
+  ' imgCursor = _LoadImage("assets\images\cursor.png")
+$if javascript
+  imgCursor = await QB.func__LoadImage("assets\\images\\cursor.png");
+  console.log("imgCursor is", imgCursor);
+$endif
+
+end sub
+
+sub beginPlayingState
+  actualGameState = GameStatePlaying
 
   ' Init game state
-  done = qbFalse
 end sub
 
 
